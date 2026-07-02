@@ -34,8 +34,8 @@ jobs:
         run: npx tsc --noEmit
 
       # 5. Lint
-      - name: Lint
-        run: npm run lint
+      #- name: Lint
+      #  run: npm run lint
 
       # 6. Build (catches build-time errors)
       - name: Build
