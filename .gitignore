@@ -3,10 +3,16 @@ dist / media
 node_modules
 .DS_Store
 .env
+.env.prod
 .next
 next-env.d.ts
 .vercel
-
+*.bat
+*.exe
+*.sh
+*.csv
+*.txt
+*.cjs
 # Payload default media upload directory
 public/media/
 
