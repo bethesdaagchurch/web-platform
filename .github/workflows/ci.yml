@@ -35,7 +35,7 @@ jobs:
         env:
           # Use production secrets for main branch
           # Use staging secrets for all other branches
-          DATABASE_URI: ${{
+          DATABASE_URL: ${{
             github.ref == 'refs/heads/main'
             && secrets.PROD_DATABASE_URI
             || secrets.STAGING_DATABASE_URI }}
