@@ -1,12 +1,10 @@
-# .github/workflows/ci.yml
-
 name: CI — Type Check, Lint & Build
 
 on:
   push:
-    branches: ["**"]        # every branch
+    branches: ["**"]
   pull_request:
-    branches: ["**"]        # every PR
+    branches: ["**"]
 
 jobs:
   ci:
@@ -14,37 +12,52 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Check out the code
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
 
-      # 3. Install dependencies
       - name: Install dependencies
         run: npm ci
 
-      # 4. TypeScript type check
-      - name: Type check
-        run: npx tsc --noEmit
-
-      # 5. Lint
       - name: Lint
         run: npm run lint
 
-      # 6. Build (catches build-time errors)
+      - name: Type check
+        run: npx tsc --noEmit
+
       - name: Build
         run: npm run build
         env:
-          # Supabase (staging values for build check)
-          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URI }}
+          # Use production secrets for main branch
+          # Use staging secrets for all other branches
+          DATABASE_URI: ${{
+            github.ref == 'refs/heads/main'
+            && secrets.PROD_DATABASE_URI
+            || secrets.STAGING_DATABASE_URI }}
+
+          NEXT_PUBLIC_SUPABASE_URL: ${{
+            github.ref == 'refs/heads/main'
+            && secrets.PROD_SUPABASE_URL
+            || secrets.STAGING_SUPABASE_URL }}
+
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{
+            github.ref == 'refs/heads/main'
+            && secrets.PROD_SUPABASE_ANON_KEY
+            || secrets.STAGING_SUPABASE_ANON_KEY }}
+
+          SUPABASE_SERVICE_ROLE_KEY: ${{
+            github.ref == 'refs/heads/main'
+            && secrets.PROD_SUPABASE_SERVICE_ROLE_KEY
+            || secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+
+          NEXT_PUBLIC_SITE_URL: ${{
+            github.ref == 'refs/heads/main'
+            && secrets.PROD_SITE_URL
+            || secrets.STAGING_SITE_URL }}
+
           PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
-          NEXT_PUBLIC_SERVER_URL: ${{ secrets.STAGING_SITE_URL }}
