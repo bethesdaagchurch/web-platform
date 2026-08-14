@@ -63,3 +63,23 @@ jobs:
           PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
 
           BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+
+          SUPABASE_S3_ACCESS_KEY_ID: ${{
+            github.ref == 'refs/heads/develop'
+            && secrets.PROD_SUPABASE_S3_ACCESS_KEY_ID
+            || secrets.SUPABASE_S3_ACCESS_KEY_ID }}
+
+          SUPABASE_S3_SECRET_ACCESS_KEY: ${{
+            github.ref == 'refs/heads/develop'
+            && secrets.PROD_SUPABASE_S3_SECRET_ACCESS_KEY
+            || secrets.STAGING_SUPABASE_S3_SECRET_ACCESS_KEY }}
+
+          SUPABASE_S3_ENDPOINT: ${{
+            github.ref == 'refs/heads/develop'
+            && secrets.PROD_SUPABASE_S3_ENDPOINT
+            || secrets.STAGING_SUPABASE_S3_ENDPOINT }}
+
+          SUPABASE_S3_BUCKET: ${{
+            github.ref == 'refs/heads/develop'
+            && secrets.PROD_SUPABASE_S3_BUCKET
+            || secrets.STAGING_SUPABASE_S3_BUCKET }}

@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url'
 import { buildConfig } from 'payload'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import { s3Storage } from '@payloadcms/storage-s3'
 import sharp from 'sharp'
 
 import { Users } from './collections/Users'
@@ -125,6 +126,35 @@ export default buildConfig({
     locales: ['en', 'ta', 'kn'],
     defaultLocale: 'en',
   },
+
+  // Vercel's serverless functions have no persistent local disk — any file
+  // saved there during one request is gone by the next. This routes all
+  // Media uploads to Supabase Storage's S3-compatible API instead, which
+  // is what actually persists them. Deliberately conditional on the real
+  // credentials being present: this lets local/sandbox testing (SQLite,
+  // no Supabase account available) keep working against local disk
+  // exactly as before, while a real deployment with the env vars set
+  // automatically uses Supabase. forcePathStyle is required specifically
+  // for Supabase's S3 compatibility layer — without it, requests resolve
+  // to the wrong URL shape and uploads fail silently.
+  plugins: [
+    s3Storage({
+      enabled: Boolean(
+        process.env.SUPABASE_S3_BUCKET && process.env.SUPABASE_S3_ACCESS_KEY_ID && process.env.SUPABASE_S3_SECRET_ACCESS_KEY
+      ),
+      collections: { media: true },
+      bucket: process.env.SUPABASE_S3_BUCKET || '',
+      config: {
+        endpoint: process.env.SUPABASE_S3_ENDPOINT,
+        region: process.env.SUPABASE_S3_REGION || 'us-east-1',
+        credentials: {
+          accessKeyId: process.env.SUPABASE_S3_ACCESS_KEY_ID || '',
+          secretAccessKey: process.env.SUPABASE_S3_SECRET_ACCESS_KEY || '',
+        },
+        forcePathStyle: true,
+      },
+    }),
+  ],
 
   sharp,
 })

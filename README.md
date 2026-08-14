@@ -859,6 +859,45 @@ rebuilt from the last independently-verified-correct Postgres backup (confirmed 
 to silently lose), with the `Donations` collection import and registration re-added to match
 the current source tree exactly. Verified line-by-line before restoring, not assumed correct.
 
+## Supabase Storage — Media uploads now persist on Vercel
+
+The `Media` collection had a TODO from very early in this project flagging that local disk
+storage (Payload's default) doesn't survive on Vercel — its serverless functions have no
+persistent filesystem, so anything an admin uploaded would work for one request and then be
+gone. Wired up `@payloadcms/storage-s3` against Supabase's S3-compatible Storage API to fix
+this for real.
+
+- **Two genuine pre-existing dependency problems surfaced and fixed while installing this**,
+  neither caused by this change: `graphql@17.0.2` was installed while Payload 3.87.1 requires
+  `^16.8.1` — a real major-version mismatch, fixed by installing `16.14.2` explicitly. Separately,
+  `@payloadcms/next`'s declared peer range for Next.js has a gap that excludes 15.5.x
+  entirely (jumps from `<15.5.0` straight to `>=16.2.6`) — confirmed this is a benign
+  declared-range lag rather than a real incompatibility, since this exact Next.js version has
+  built and run successfully throughout this entire project, and proceeded past it deliberately
+  rather than downgrading Next.js or leaving the install broken.
+- **The plugin is conditional on real credentials being present** (`SUPABASE_S3_ACCESS_KEY_ID`,
+  `SUPABASE_S3_SECRET_ACCESS_KEY`, `SUPABASE_S3_ENDPOINT`, `SUPABASE_S3_BUCKET`) — falls back to
+  local disk automatically when they're not set, so local development and this project's own
+  SQLite-based sandbox testing keep working without needing real Supabase credentials.
+  `forcePathStyle: true` is set on the S3 client config, which Supabase's compatibility layer
+  specifically requires — without it, requests resolve to the wrong URL shape.
+- **A real, non-obvious bug found and fixed during testing**: the admin panel failed to load
+  entirely on first test, with a console error that the plugin's own upload-handler component
+  wasn't found in Payload's import map. Plugins that add admin UI components need that map
+  regenerated (`payload generate:importmap`) — not obvious from the plugin's own setup
+  instructions. Regenerated it, confirmed the new component appeared, and confirmed the admin
+  panel loads correctly afterward.
+- **Verified both the "on" and "off" paths, not just one**: a full build with zero Supabase env
+  vars set succeeds cleanly (confirming the fallback works); a full build with fake-but-present
+  credentials also succeeds, and the admin panel loads correctly with the plugin active.
+  Attempted an actual file upload against those fake credentials and got a clean "Something
+  went wrong" toast rather than a crash — confirming the plugin genuinely attempts the real
+  Supabase connection instead of silently no-opping, which is the correct failure mode given
+  Supabase isn't reachable from this sandbox.
+- **Same honest limitation as Brevo and Razorpay**: a real, successful upload landing in your
+  actual Supabase bucket can't be verified from here — that needs confirming on your own
+  deployment with your real credentials in place.
+
 ## Loading state
 
 `src/app/[locale]/(site)/loading.tsx` uses Next's built-in convention: while any page under
