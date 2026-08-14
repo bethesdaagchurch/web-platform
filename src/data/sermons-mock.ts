@@ -1,0 +1,148 @@
+import type { SermonHeroData, SermonEntry, FilterOption, PodcastCtaData } from '@/types/sermons'
+
+export const sermonHero: SermonHeroData = {
+  badge: 'Latest Message',
+  date: 'October 29, 2023',
+  title: 'The Power of Stillness',
+  description:
+    'In a world filled with constant noise, discovering the sacred space of stillness is not just a luxury, it is a spiritual necessity.',
+  backgroundImage: '/images/sermon-hero-stillness.jpg',
+  slug: 'the-power-of-stillness',
+  youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+}
+
+export const seriesOptions: FilterOption[] = [
+  { value: 'all', label: 'All Series' },
+  { value: 'parables', label: 'The Parables Series' },
+  { value: 'romans', label: 'Book of Romans' },
+  { value: 'standalone', label: 'Standalone Message' },
+]
+
+export const speakerOptions: FilterOption[] = [
+  { value: 'all', label: 'All Speakers' },
+  { value: 'pastor-john', label: 'Pastor John' },
+  { value: 'sarah-miller', label: 'Sarah Miller' },
+]
+
+export const topicOptions: FilterOption[] = [
+  { value: 'all', label: 'All Topics' },
+  { value: 'grace', label: 'Grace' },
+  { value: 'faith', label: 'Faith' },
+  { value: 'comfort', label: 'Comfort' },
+  { value: 'stillness', label: 'Stillness' },
+]
+
+export const sermonEntries: SermonEntry[] = [
+  {
+    id: 'prodigal',
+    slug: 'the-prodigals-return',
+    title: 'The Prodigal\u2019s Return',
+    seriesLabel: 'The Parables Series',
+    series: 'parables',
+    description: 'A deep dive into the overwhelming grace found in the story of the lost son.',
+    scripture: 'Luke 15:11-32',
+    speakerName: 'Pastor John',
+    speakerInitials: 'JD',
+    speaker: 'pastor-john',
+    topic: 'grace',
+    date: '2023-10-22',
+    duration: '45:20',
+    thumbnail: '/images/sermon-prodigal.jpg',
+    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+  },
+  {
+    id: 'justified',
+    slug: 'justified-by-faith',
+    title: 'Justified by Faith',
+    seriesLabel: 'Book of Romans',
+    series: 'romans',
+    description: 'Understanding the foundational truth of our faith and how it transforms our daily walk.',
+    scripture: 'Romans 5:1-11',
+    speakerName: 'Sarah Miller',
+    speakerInitials: 'SM',
+    speaker: 'sarah-miller',
+    topic: 'faith',
+    date: '2023-10-15',
+    duration: '38:15',
+    thumbnail: '/images/sermon-justified.jpg',
+    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+  },
+  {
+    id: 'valley',
+    slug: 'walking-through-the-valley',
+    title: 'Walking Through the Valley',
+    seriesLabel: 'Standalone Message',
+    series: 'standalone',
+    description: 'Finding comfort and presence when walking through life\u2019s most difficult seasons.',
+    scripture: 'Psalm 23',
+    speakerName: 'Pastor John',
+    speakerInitials: 'JD',
+    speaker: 'pastor-john',
+    topic: 'comfort',
+    date: '2023-10-08',
+    duration: '52:10',
+    thumbnail: '/images/sermon-valley.jpg',
+    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+  },
+  {
+    id: 'lost-coin',
+    slug: 'the-lost-coin',
+    title: 'The Lost Coin',
+    seriesLabel: 'The Parables Series',
+    series: 'parables',
+    description: 'What a single lost coin teaches us about how relentlessly we are pursued and valued.',
+    scripture: 'Luke 15:8-10',
+    speakerName: 'Pastor John',
+    speakerInitials: 'JD',
+    speaker: 'pastor-john',
+    topic: 'grace',
+    date: '2023-10-01',
+    duration: '41:05',
+    thumbnail: '/images/sermon-lost-coin.jpg',
+    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+  },
+  {
+    id: 'no-condemnation',
+    slug: 'no-condemnation',
+    title: 'No Condemnation',
+    seriesLabel: 'Book of Romans',
+    series: 'romans',
+    description: 'Freedom from guilt and shame through the finished work of the cross.',
+    scripture: 'Romans 8:1-4',
+    speakerName: 'Sarah Miller',
+    speakerInitials: 'SM',
+    speaker: 'sarah-miller',
+    topic: 'faith',
+    date: '2023-09-24',
+    duration: '36:40',
+    thumbnail: '/images/sermon-condemnation.jpg',
+    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+  },
+  {
+    id: 'still-small-voice',
+    slug: 'the-still-small-voice',
+    title: 'The Still Small Voice',
+    seriesLabel: 'Standalone Message',
+    series: 'standalone',
+    description: 'Learning to recognize God\u2019s voice in the quiet, ordinary moments of life.',
+    scripture: '1 Kings 19:11-13',
+    speakerName: 'Pastor John',
+    speakerInitials: 'JD',
+    speaker: 'pastor-john',
+    topic: 'stillness',
+    date: '2023-09-17',
+    duration: '43:50',
+    thumbnail: '/images/sermon-still-voice.jpg',
+    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+  },
+]
+
+export const podcastCta: PodcastCtaData = {
+  heading: 'Take the Message With You',
+  description:
+    'Listen to our weekly sermons on your favorite streaming platform. Subscribe to stay updated and never miss a message.',
+  links: [
+    { label: 'Apple Podcasts', href: 'https://podcasts.apple.com', icon: 'headphones' },
+    { label: 'Spotify', href: 'https://open.spotify.com', icon: 'waveform' },
+  ],
+}

@@ -1,0 +1,17 @@
+node_modules
+.next
+out
+.env
+.env.local
+.env.prod
+.env.example
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+
+# Payload local file uploads (dev only — production uses Supabase Storage,
+# see the TODO in src/collections/Media.ts) and any local test databases
+media/
+*.db
+*.db-shm
+*.db-wal

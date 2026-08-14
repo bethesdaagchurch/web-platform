@@ -1,0 +1,483 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "ministries": "Ministries",
+    "sermons": "Sermons",
+    "events": "Events",
+    "contact": "Contact"
+  },
+  "header": {
+    "login": "Login",
+    "give": "Give",
+    "languageLabel": "Change language"
+  },
+  "footer": {
+    "connectHeading": "Connect",
+    "legalHeading": "Legal",
+    "joinGroup": "Join a Group",
+    "volunteer": "Volunteer",
+    "newHere": "New Here?",
+    "prayer": "Prayer",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "cookiePolicy": "Cookie Policy",
+    "sitemap": "Sitemap",
+    "rights": "All rights reserved."
+  },
+  "notFound": {
+    "heading": "Page not found",
+    "backHome": "Back to home"
+  },
+  "common": {
+    "signIn": "Sign In",
+    "signingIn": "Signing In...",
+    "emailAddress": "Email Address",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot Password?",
+    "password": "Password",
+    "genericError": "Something went wrong. Please try again.",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "backToHome": "Back to Home",
+    "lastUpdated": "Last Updated",
+    "getDirections": "Get Directions",
+    "message": "Message",
+    "subject": "Subject",
+    "submitting": "Submitting...",
+    "fullName": "Full Name",
+    "confirmPassword": "Confirm Password",
+    "termsOfService": "Terms of Service",
+    "privacyPolicy": "Privacy Policy"
+  },
+  "memberMenu": {
+    "dashboard": "Dashboard",
+    "signingOut": "Signing out...",
+    "logOut": "Log out"
+  },
+  "membersOnlyGate": {
+    "defaultPrompt": "Sign in as a member to access this.",
+    "leadershipPrompt": "Sign in as a member to express interest in leading a group.",
+    "joinGroupPrompt": "Sign in as a member to join this group.",
+    "liveChatPrompt": "Sign in as a member to join the live chat."
+  },
+  "pageLoader": {
+    "defaultHeading": "Just a moment...",
+    "defaultSubtext": "We're preparing your experience.",
+    "worshipHeading": "Preparing a space for worship...",
+    "worshipSubtext": "Entering a moment of prayer and community."
+  },
+  "pagePlaceholder": {
+    "badge": "Page in progress",
+    "defaultNote": "This route is wired up and reachable, but the real design for this page hasn't been built yet."
+  },
+  "homepage": {
+    "joinUsSunday": {
+      "liveSoon": "LIVE SOON",
+      "heading": "Join Us This Sunday",
+      "description": "We gather weekly to celebrate our faith and grow together. Whether you're a first-time visitor or a regular attendee, there's a seat for you.",
+      "viewSchedule": "View Full Worship Schedule"
+    },
+    "findYourPlace": {
+      "heading": "Find Your Place",
+      "description": "There's a ministry for everyone at Bethesda. Join a group that fits your life stage and passion."
+    },
+    "impactKingdom": {
+      "heading": "Impact the Kingdom",
+      "description": "Your faithfulness allows us to share the love of Christ locally and globally. Securely give your tithes and offerings today.",
+      "oneTime": "One-time Gift",
+      "recurring": "Recurring Gift",
+      "secure": "Safe & Secure 256-bit Encryption",
+      "whereItGoes": "Where it goes"
+    },
+    "latestSermons": {
+      "heading": "Latest Word",
+      "description": "Dive into our recent messages and teachings",
+      "archive": "Archive",
+      "featuredMessage": "Featured Message"
+    },
+    "stayConnected": {
+      "heading": "Stay Connected",
+      "description": "Receive weekly updates, sermon notes, and event reminders.",
+      "emailLabel": "Email address",
+      "emailPlaceholder": "Email Address",
+      "subscribe": "Subscribe"
+    },
+    "upcomingEvents": {
+      "heading": "Upcoming at Bethesda",
+      "details": "Details"
+    },
+    "visitUs": {
+      "heading": "Visit Us",
+      "contact": "Contact",
+      "getDirections": "Get Directions"
+    }
+  },
+  "loginForm": {
+    "incorrectCredentials": "Incorrect email or password."
+  },
+  "about": {
+    "coreValues": {
+      "heading": "Our Core Values",
+      "description": "The pillars that uphold our community and direct our steps daily."
+    },
+    "leadership": {
+      "heading": "Meet Our Leadership",
+      "description": "Guided by compassion and grounded in wisdom, our pastoral team is dedicated to serving the spiritual needs of our growing family."
+    },
+    "journey": {
+      "heading": "Our Journey",
+      "description": "Milestones of grace from our humble beginnings to today."
+    }
+  },
+  "ministries": {
+    "filters": {
+      "all": "All",
+      "adults": "Adults",
+      "kidsYouth": "Kids & Youth",
+      "service": "Service"
+    },
+    "emptyState": "No ministries in this category yet.",
+    "rotaBanner": {
+      "heading": "Worship Rota",
+      "description": "View this month's service schedule and team assignments"
+    },
+    "leadershipInterest": {
+      "genericError": "Could not submit. Please try again.",
+      "successHeading": "Thanks for Stepping Up",
+      "successMessage": "We'll be in touch about next steps for leading a group.",
+      "heading": "Interested in Leading?",
+      "description": "We are always looking for passionate individuals to facilitate new groups. Let us know you're interested.",
+      "areaOfInterest": "Area of Interest",
+      "submitting": "Submitting...",
+      "submit": "Submit Request"
+    }
+  },
+  "sermons": {
+    "allSeries": "All Series",
+    "allSpeakers": "All Speakers",
+    "allTopics": "All Topics",
+    "searchPlaceholder": "Search sermons, speakers, or topics...",
+    "noResults": "No sermons match your search.",
+    "loadMore": "Load More Sermons",
+    "hero": {
+      "watchNow": "Watch Now"
+    }
+  },
+  "events": {
+    "categories": {
+      "all": "All",
+      "youth": "Youth",
+      "missions": "Missions",
+      "conferences": "Conferences",
+      "worship": "Worship"
+    },
+    "communityFocus": "Community Focus",
+    "searchPlaceholder": "Search events...",
+    "upcomingEvents": "Upcoming Events",
+    "noResults": "No events match your search.",
+    "loadMore": "Load More Events",
+    "calendar": {
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month",
+      "primaryEvent": "Primary Event",
+      "multiDayEvent": "Multi-day Conference/Retreat",
+      "sundayService": "Sunday Service"
+    },
+    "registration": {
+      "heading": "Register for this Event",
+      "registeringAs": "Registering as",
+      "confirmText": "I confirm I'll attend",
+      "submit": "Confirm Registration",
+      "submitting": "Registering...",
+      "genericError": "Could not complete your registration. Please try again.",
+      "signInPrompt": "Sign in as a member to register for this event.",
+      "alreadyRegisteredHeading": "You're Registered",
+      "alreadyRegisteredMessage": "We've got your spot for this event. See you there!",
+      "cancel": "Cancel Registration",
+      "cancelling": "Cancelling...",
+      "cancelError": "Could not cancel your registration. Please try again.",
+      "registerButton": "Register",
+      "formIntro": "Please provide your details and preferences below to complete your registration.",
+      "phone": "Phone Number",
+      "numberOfAttendees": "Number of Attendees",
+      "specialRequests": "Dietary Requirements or Special Requests",
+      "specialRequestsPlaceholder": "Let us know how we can make your experience better...",
+      "completeRegistration": "Complete Registration",
+      "alreadyRegistered": "Already Registered"
+    },
+    "detail": {
+      "date": "Date",
+      "location": "Location",
+      "cost": "Cost"
+    },
+    "hero": {
+      "registerNow": "Register Now",
+      "learnMore": "Learn More"
+    }
+  },
+  "legal": {
+    "contents": "Contents"
+  },
+  "contact": {
+    "connectDirectly": "Connect Directly",
+    "address": "Address",
+    "phone": "Phone",
+    "email": "Email",
+    "officeHours": "Office Hours",
+    "visitInPerson": "Visit us in person",
+    "genericError": "Could not send your message. Please try again.",
+    "sent": "Message Sent",
+    "sentMessage": "Thank you for reaching out — we'll get back to you soon.",
+    "sendAMessage": "Send a Message",
+    "messagePlaceholder": "How can we assist you today?",
+    "sending": "Sending...",
+    "send": "Send Message"
+  },
+  "give": {
+    "secureGiving": "Secure Online Giving",
+    "oneTime": "One-Time",
+    "recurring": "Recurring",
+    "custom": "Custom",
+    "customAmount": "Custom amount",
+    "enterAmount": "Enter amount",
+    "designateFund": "Designate to Fund",
+    "givingPrefix": "You're giving",
+    "givingTo": "to",
+    "once": "once",
+    "monthly": "monthly",
+    "chooseAmount": "Choose or enter an amount to continue.",
+    "continueToPayment": "Continue to Secure Payment",
+    "donorName": "Full Name",
+    "donorEmail": "Email Address",
+    "donorPhone": "Phone Number (optional)",
+    "processing": "Processing...",
+    "genericError": "Could not process your donation. Please try again.",
+    "thankYouHeading": "Thank You!",
+    "thankYouMessage": "Your generosity is truly appreciated. A record of this gift has been saved.",
+    "giveAgain": "Make Another Gift"
+  },
+  "prayer": {
+    "signInToJoinGroup": "Sign in to join a prayer group",
+    "genericError": "Could not submit your request. Please try again.",
+    "requestReceived": "Request Received",
+    "requestReceivedMessage": "Thank you for trusting us with this. Our prayer team will be lifting you up.",
+    "howCanWePray": "How can we pray for you?",
+    "yourRequest": "Your Prayer Request",
+    "keepPrivate": "Keep this request private (Prayer team only)",
+    "submit": "Submit Request"
+  },
+  "visit": {
+    "serviceTimes": "Service Times",
+    "whatToExpect": "What to Expect",
+    "genericError": "Could not schedule your visit. Please try again.",
+    "seeYouSoon": "We'll See You Soon",
+    "seeYouSoonMessage": "Thanks for letting us know you're coming — we're looking forward to it.",
+    "planYourVisit": "Plan Your Visit",
+    "planIntro": "Let us know you're coming so we can prepare for your arrival and ensure you have a wonderful experience.",
+    "dateOfVisit": "Date of Visit",
+    "numberInParty": "Number in Party",
+    "wantsHost": "I'd like a Host to meet me at the door",
+    "wantsHostSubtext": "We'll pair you with someone to show you around and answer any questions.",
+    "scheduling": "Scheduling...",
+    "scheduleMyVisit": "Schedule My Visit"
+  },
+  "directions": {
+    "serviceTimes": "Service Times",
+    "drivingDirections": "Driving Directions",
+    "parkingAccessibility": "Parking & Accessibility"
+  },
+  "schedule": {
+    "specialServices": "Special Services",
+    "weeklyServices": "Weekly Services"
+  },
+  "live": {
+    "liveChat": "Live Chat",
+    "sermonNotes": "Sermon Notes",
+    "sayHello": "Say hello...",
+    "sendMessage": "Send message"
+  },
+  "dashboard": {
+    "welcomeBack": "Welcome back",
+    "overview": "Here is a quick overview of your community involvement and spiritual journey for the week.",
+    "myGroups": "My Groups",
+    "viewAll": "View All",
+    "notInGroup": "You're not part of any groups yet.",
+    "findOne": "Find one to join",
+    "volunteerShifts": "Volunteer Shifts",
+    "manageSchedule": "Manage Schedule",
+    "recentSermons": "Recent Sermons",
+    "series": "Series",
+    "myEvents": "My Registered Events",
+    "notRegisteredAnyEvents": "You haven't registered for any events yet.",
+    "browseEvents": "Browse Events",
+    "myServingSchedule": "My Serving Schedule",
+    "notScheduledYet": "You're not scheduled to serve yet.",
+    "myMinistries": "My Ministries",
+    "notInMinistry": "You're not part of any ministries yet.",
+    "myRequests": "My Requests",
+    "requestPending": "Pending",
+    "requestDeclined": "Declined"
+  },
+  "rota": {
+    "filters": "Filters",
+    "month": "Month",
+    "ministry": "Ministry",
+    "allMinistries": "All Ministries",
+    "ministrySchedule": "Ministry Schedule",
+    "worshipRota": "Worship Rota",
+    "editRota": "Edit Rota",
+    "noEntries": "No rota entries for this selection yet.",
+    "sermonWord": "Sermon & Word",
+    "guest": "Guest",
+    "worshipTeam": "Worship Team",
+    "ledBy": "Led by",
+    "specialItems": "Special Items"
+  },
+  "groups": {
+    "categories": {
+      "worship": "Worship",
+      "youth": "Youth",
+      "careGroups": "Care Groups",
+      "kids": "Kids",
+      "care": "Care"
+    },
+    "sidebarHeading": "Ministries",
+    "sidebarSubtext": "Find your community",
+    "activeFilters": "Active Filters:",
+    "clearAll": "Clear All",
+    "noResults": "No groups match your search yet.",
+    "loadMore": "Load More Groups",
+    "filtersButton": "Filters"
+  },
+  "volunteer": {
+    "yourName": "Your Name",
+    "emailAddress": "Email Address",
+    "genericError": "Could not submit. Please try again.",
+    "interested": "I'm Interested",
+    "thanks": "Thanks — we'll be in touch soon!"
+  },
+  "sitemap": {
+    "pageHeading": "Sitemap",
+    "pageSubtext": "A comprehensive guide to finding your way around our digital sanctuary.",
+    "sections": {
+      "home-core": {
+        "title": "Home & Core",
+        "links": {
+          "homepage": {
+            "label": "Homepage",
+            "description": "Our main landing page and latest updates."
+          },
+          "imNewHere": {
+            "label": "I'm New Here",
+            "description": "Information for first-time visitors."
+          },
+          "serviceTimes": {
+            "label": "Service Times & Location",
+            "description": "When and where we gather for worship."
+          }
+        }
+      },
+      "about-us": {
+        "title": "About Us",
+        "links": {
+          "ourStory": {
+            "label": "Our Story & Vision",
+            "description": "The history and future direction of our church."
+          },
+          "leadershipTeam": {
+            "label": "Leadership Team",
+            "description": "Meet our pastors and staff members."
+          },
+          "whatWeBelieve": {
+            "label": "What We Believe",
+            "description": "Our core tenets and statement of faith."
+          }
+        }
+      },
+      "ministries": {
+        "title": "Ministries",
+        "links": {
+          "kidsMinistry": {
+            "label": "Kids Ministry",
+            "description": "Programs for children infants through 5th grade."
+          },
+          "youthYoungAdults": {
+            "label": "Youth & Young Adults",
+            "description": "Gatherings and groups for middle school through college."
+          },
+          "adultSmallGroups": {
+            "label": "Adult Small Groups",
+            "description": "Community groups meeting throughout the week."
+          }
+        }
+      },
+      "sermons-media": {
+        "title": "Sermons & Media",
+        "links": {
+          "latestSermon": {
+            "label": "Latest Sermon",
+            "description": "Watch or listen to the most recent message."
+          },
+          "sermonArchive": {
+            "label": "Sermon Archive",
+            "description": "Browse past series and individual teachings."
+          },
+          "liveStream": {
+            "label": "Live Stream",
+            "description": "Join our Sunday services online in real-time."
+          }
+        }
+      },
+      "events-news": {
+        "title": "Events & News",
+        "links": {
+          "upcomingEvents": {
+            "label": "Upcoming Events Calendar",
+            "description": "View all scheduled church activities."
+          },
+          "churchBlog": {
+            "label": "Church Blog & Announcements",
+            "description": "Read the latest news and pastoral reflections."
+          }
+        }
+      }
+    }
+  },
+  "auth": {
+    "signInHeading": "Sign in to your account",
+    "createAccountHeading": "Create your account",
+    "newHere": "New here?",
+    "createAnAccount": "Create an account",
+    "alreadyHaveAccount": "Already have an account?",
+    "passwordsDontMatch": "Passwords do not match.",
+    "agreeToTerms": "Please agree to the Terms of Service and Privacy Policy to continue.",
+    "genericError": "Could not create your account. Please try again.",
+    "agreeToTermsPrefix": "I agree to the",
+    "and": "and",
+    "creatingAccount": "Creating Account...",
+    "createAccount": "Create Account"
+  },
+  "placeholders": {
+    "blog": "Blog & Announcements",
+    "resources": "Resources",
+    "forgotPassword": "Forgot Password",
+    "fullBio": "Full Bio"
+  },
+  "joinRequests": {
+    "join": "Join Group",
+    "pending": "Request Pending",
+    "approved": "You're Already a Member",
+    "submitting": "Requesting...",
+    "genericError": "Could not submit your request. Please try again."
+  },
+  "newsletter": {
+    "firstName": "First Name",
+    "genericError": "Could not process your subscription. Please try again.",
+    "submitting": "Submitting...",
+    "checkYourEmail": "Check your email to confirm your subscription!",
+    "confirmedHeading": "You're Confirmed!",
+    "confirmedMessage": "Thank you for confirming your subscription. You’ll now receive our updates straight to your inbox.",
+    "confirmedButton": "Back to Homepage"
+  }
+}

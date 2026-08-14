@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-surface-cream text-ink;
+}
+
+/* Inter has no Tamil/Kannada glyphs — switch the body font based on the
+   <html lang> attribute rather than per-component logic. English (and any
+   unmatched locale) keeps the default font-sans (Inter) from Tailwind. */
+html:lang(ta) body {
+  font-family: var(--font-noto-tamil), sans-serif;
+}
+
+html:lang(kn) body {
+  font-family: var(--font-noto-kannada), sans-serif;
+}
