@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { getTranslations } from 'next-intl/server'
 import { Church, HandHeart, Globe, Smile, ArrowRight } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { VolunteerInterestForm } from '@/components/volunteer/VolunteerInterestForm'
@@ -6,12 +7,14 @@ import type { ServiceArea } from '@/types/volunteer'
 
 const iconMap = { worship: Church, hospitality: HandHeart, outreach: Globe, kids: Smile }
 
-export function ServiceAreasGrid({ areas }: { areas: ServiceArea[] }) {
+export async function ServiceAreasGrid({ areas, isMember }: { areas: ServiceArea[]; isMember: boolean }) {
+  const t = await getTranslations('volunteer')
+
   return (
     <section id="areas-of-service" className="mx-auto max-w-content px-6 py-16">
       <div className="text-center">
-        <h2 className="text-3xl font-semibold text-ink">Areas of Service</h2>
-        <p className="mt-2 text-sm text-ink-muted">Find a ministry that aligns with your passions and schedule.</p>
+        <h2 className="text-3xl font-semibold text-ink">{t('areasHeading')}</h2>
+        <p className="mt-2 text-sm text-ink-muted">{t('areasSubtext')}</p>
       </div>
 
       <div className="mt-10 grid gap-6 md:grid-cols-3 md:grid-rows-2">
@@ -32,12 +35,19 @@ export function ServiceAreasGrid({ areas }: { areas: ServiceArea[] }) {
                   </span>
                   <h3 className="mt-3 text-xl font-semibold text-white">{area.title}</h3>
                   <p className="mt-1 max-w-md text-sm text-white/85">{area.description}</p>
-                  {area.signUpHref && (
+                  {/* Hidden entirely for a logged-in member, not just
+                      relabeled — there's no good destination for this
+                      button yet (it currently just points wherever the
+                      admin has set signUpHref, e.g. a generic contact
+                      form), so showing nothing is more honest than
+                      showing a CTA that doesn't lead anywhere meaningful
+                      for someone who's already a known member. */}
+                  {area.signUpHref && !isMember && (
                     <Link
                       href={area.signUpHref}
                       className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-white hover:underline"
                     >
-                      {area.signUpLabel || 'Sign Up'} <ArrowRight size={14} />
+                      {area.signUpLabel || t('signUpDefault')} <ArrowRight size={14} />
                     </Link>
                   )}
                 </div>

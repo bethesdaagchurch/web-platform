@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
-import { CalendarDays, MapPin, Wallet } from 'lucide-react'
+import { CalendarDays, MapPin, Wallet, ArrowLeft } from 'lucide-react'
+import { Link } from '@/i18n/navigation'
 import { getPayloadClient } from '@/lib/payload'
 import { getCurrentMember } from '@/lib/get-member'
 import { categoryMeta } from '@/lib/events-adapter'
@@ -57,6 +58,12 @@ export default async function EventDetailPage({
 
   return (
     <div className="px-6 py-16 text-center">
+      <div className="mx-auto mb-6 max-w-2xl text-left">
+        <Link href="/events" className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-navy hover:underline">
+          <ArrowLeft size={16} /> {tDetail('backToEvents')}
+        </Link>
+      </div>
+
       <span className="inline-block rounded-full bg-brand-gold-light px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-navy-dark">
         {categoryMeta[doc.category]?.label ?? doc.category.toUpperCase()}
       </span>

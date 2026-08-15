@@ -151,7 +151,8 @@
       "areaOfInterest": "Area of Interest",
       "submitting": "Submitting...",
       "submit": "Submit Request"
-    }
+    },
+    "backToMinistries": "Back to Ministries"
   },
   "sermons": {
     "allSeries": "All Series",
@@ -209,7 +210,8 @@
     "detail": {
       "date": "Date",
       "location": "Location",
-      "cost": "Cost"
+      "cost": "Cost",
+      "backToEvents": "Back to Events"
     },
     "hero": {
       "registerNow": "Register Now",
@@ -355,7 +357,10 @@
     "emailAddress": "Email Address",
     "genericError": "Could not submit. Please try again.",
     "interested": "I'm Interested",
-    "thanks": "Thanks — we'll be in touch soon!"
+    "thanks": "Thanks — we'll be in touch soon!",
+    "areasHeading": "Areas of Service",
+    "areasSubtext": "Find a ministry that aligns with your passions and schedule.",
+    "signUpDefault": "Sign Up"
   },
   "sitemap": {
     "pageHeading": "Sitemap",
@@ -456,7 +461,13 @@
     "agreeToTermsPrefix": "I agree to the",
     "and": "and",
     "creatingAccount": "Creating Account...",
-    "createAccount": "Create Account"
+    "createAccount": "Create Account",
+    "forgotPasswordHeading": "Reset your password",
+    "forgotPasswordSubtext": "Enter your email and we'll help you get back in.",
+    "sendResetLink": "Send Reset Link",
+    "notYetAvailableHeading": "Online reset isn't available yet",
+    "notYetAvailableMessage": "We're still setting this up. In the meantime, please reach out and we'll help you reset your password directly.",
+    "backToSignIn": "Back to Sign In"
   },
   "placeholders": {
     "blog": "Blog & Announcements",

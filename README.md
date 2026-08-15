@@ -898,6 +898,116 @@ this for real.
   actual Supabase bucket can't be verified from here — that needs confirming on your own
   deployment with your real credentials in place.
 
+## Volunteer page: "Sign Up" hidden entirely for logged-in members
+
+Reported directly: the volunteer "image" variant cards (the wide cards with a background
+photo) always showed "Sign Up" regardless of whether the visitor was already a logged-in
+member — a plain, static link with zero session awareness. For a member who's already part of
+the church, "Sign Up" reads like creating a new account, which isn't what they'd be doing.
+
+**This went through two iterations, worth documenting since the second is simpler and better
+for right now.** The first version swapped the label to a translated "Join the Volunteer Team"
+for logged-in members while keeping the same underlying link. Discussing the actual
+destination surfaced a real gap: that link currently just points wherever the admin has typed
+(commonly a generic `/contact` form), with no connection to the real, trackable
+join-request system already built for Ministries. A precise fix — linking each volunteer area
+to its specific matching ministry — was considered and intentionally deferred; the simpler,
+better-for-now choice was to remove the link for logged-in members entirely rather than show a
+relabeled button that still doesn't lead anywhere meaningful.
+
+- **The button is now hidden completely for a logged-in member** — not relabeled, not
+  disabled, just absent. Logged-out visitors see the admin's existing configured label (or
+  "Sign Up" if unset) exactly as before; nothing about that per-area customization changed.
+- Removed the now-unused `joinTeam` translation key from all three languages and the
+  `getTranslations` call it required, since `ServiceAreasGrid` no longer needs any
+  translation lookups at all — kept the component as simple as the actual behavior calls for,
+  rather than leaving unused scaffolding in place.
+- `export const dynamic = 'force-dynamic'` on the Volunteer page (added in the previous pass,
+  confirmed still correct here) remains necessary — the page still depends on session state to
+  decide whether to render this button at all, so a cached response could still leak one
+  visitor's login state onto someone else's screen without it.
+- Verified both states directly on the real page, not assumed: a logged-out visitor still
+  sees "Sign Up" exactly as before; logged in as a real seeded member, the same card shows no
+  sign-up link at all, with the card's layout still reading cleanly (title and description,
+  no awkward empty space where the button used to be) — confirmed visually, not just via a
+  text-content check.
+
+## Back button on Events and Ministries detail pages
+
+Reported directly: no way to get back to the Events list from an individual event page,
+expecting this to already exist since the request compared it to Ministries. Checked first
+rather than assuming the comparison was accurate — Ministries didn't actually have one either,
+anywhere in the project. Rather than build against a false premise, added it to both pages
+consistently, since a visitor landing on either would reasonably expect the same behavior.
+
+- A simple "← Back to Events" / "← Back to Ministries" link now sits at the top of each detail
+  page, linking back to the respective listing page.
+- Translated into all three languages, added under the existing `events.detail` namespace
+  (already used for the Date/Location/Cost labels on that page) and a new `ministries` key,
+  matching each page's established translation structure rather than introducing a new
+  ad-hoc namespace.
+- **Verified by actually clicking the link, not just checking the text renders**: seeded a
+  real event and a real ministry, loaded each detail page, clicked the back link, and
+  confirmed the browser genuinely lands on `/events` and `/ministries` respectively — not just
+  that "Back to Events" appears somewhere in the page text. Confirmed both render correctly in
+  Tamil as well.
+
+## Forgot Password — a real screen, honestly not wired up yet
+
+Discussed before building: real password-reset email requires domain authentication with
+Brevo, which Gmail cannot satisfy (Brevo explicitly refuses to authenticate free email
+provider domains) and which isn't possible at all without an owned domain — still on a
+vercel.app URL at time of writing. Rather than build nothing, or build something that fakes
+success, landed on a middle path: a real screen matching the Login/Create Account design
+exactly, with an honest message once submitted rather than a "check your email" confirmation
+that would never actually deliver anything.
+
+- Replaced the generic `PagePlaceholder` that previously sat at `/forgot-password` (the
+  "Forgot Password?" link on the login form already correctly pointed here — it was the
+  destination page itself that was never built).
+- **Deliberately does not call Payload's real `forgot-password` endpoint.** That endpoint
+  would technically "succeed" today — Payload generates a reset token regardless of whether
+  an email adapter is configured — but with no email adapter in place, the reset email would
+  silently never arrive. Showing a fake success message for something that can't actually
+  happen would be worse than being upfront that it isn't ready.
+- Instead, submitting shows a clear "Online reset isn't available yet" message alongside the
+  church's **real, admin-configured** phone number and email (pulled from the same
+  `SiteSettings` global used throughout the rest of the site, not hardcoded) — so anyone
+  locked out still has a genuine, working way to get help in the meantime.
+- Verified the real data flows through correctly, not just that the page renders: seeded
+  `SiteSettings` with distinctive test contact info, clicked the actual "Forgot Password?"
+  link from the real Login page (rather than navigating directly), and confirmed both the
+  church name and the exact seeded phone/email appear on the resulting message — proving this
+  reads live data, not a placeholder. Also confirmed the full flow renders correctly in Tamil.
+- **When the domain is ready**: wiring this up for real means adding Brevo SMTP credentials as
+  an email adapter in `payload.config.ts` (the same conversation already had, just pending the
+  domain) and swapping this form's submit handler to call Payload's real endpoint instead of
+  showing the static message — the screen and its design won't need to change, just the one
+  handler function.
+
+## Missing translation audit: Volunteer page's "Areas of Service" heading
+
+Asked to check for translations missed in earlier work, rather than pointed at a specific
+known spot. Searched systematically across every component with no translation import at all
+(the clearest signal of a missed spot) rather than just re-reading files from memory.
+
+- **Found and fixed**: `ServiceAreasGrid.tsx`'s "Areas of Service" heading, its subtext, and
+  the "Sign Up" fallback label were all hardcoded English, never wired to the translation
+  system — left behind across the several rounds of work on this exact component (the
+  Sign-Up-vs-Join-the-Volunteer-Team changes) without ever being caught, since the component
+  worked correctly in English the whole time.
+- **A second finding, correctly triaged rather than treated the same way**: `LoadingScreen.tsx`
+  also has hardcoded English text ("Preparing a space for worship…"), but a search across the
+  entire `src` directory confirmed it's imported nowhere at all — genuinely dead code no real
+  visitor can ever see. Left as-is rather than "fixed," since translating text nobody
+  encounters isn't a real improvement, and noted here for visibility rather than silently
+  left for someone to wonder about later.
+- Verified in all three languages on the real page, not just checked that new keys exist:
+  confirmed the heading renders correctly in English, Tamil, and Kannada, and specifically
+  confirmed the English fallback text is completely absent on the Tamil/Kannada versions —
+  the check that actually matters, since a broken translation key can silently fall back to
+  showing English without erroring.
+
 ## Loading state
 
 `src/app/[locale]/(site)/loading.tsx` uses Next's built-in convention: while any page under

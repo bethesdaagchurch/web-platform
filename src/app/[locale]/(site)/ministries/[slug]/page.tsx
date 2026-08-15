@@ -1,8 +1,9 @@
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
-import { Mail } from 'lucide-react'
+import { getTranslations } from 'next-intl/server'
+import { Mail, ArrowLeft } from 'lucide-react'
+import { Link } from '@/i18n/navigation'
 import { getPayloadClient } from '@/lib/payload'
-import { BackButton } from '@/components/ui/BackButton'
 
 export default async function MinistryDetailPage({
   params,
@@ -11,6 +12,7 @@ export default async function MinistryDetailPage({
 }) {
   const { slug, locale } = await params
   const payload = await getPayloadClient()
+  const t = await getTranslations('ministries')
 
   // Deliberately not using the ministries-adapter's array mapper here: it
   // falls back to the full mock list when given an empty array, which
@@ -31,13 +33,16 @@ export default async function MinistryDetailPage({
 
   return (
     <div className="mx-auto max-w-content px-6 py-16">
-       <BackButton fallbackHref="/ministries" label="Back to Ministries" />
+      <Link href="/ministries" className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-brand-navy hover:underline">
+        <ArrowLeft size={16} /> {t('backToMinistries')}
+      </Link>
+
       <Image
         src={image || '/images/ministry-youth.jpg'}
         alt={doc.name}
         width={1000}
         height={500}
-        className="mt-6 h-80 w-full rounded-card object-cover"
+        className="h-80 w-full rounded-card object-cover"
       />
       <h1 className="mt-6 text-3xl font-semibold text-brand-navy-dark">{doc.name}</h1>
       <p className="mt-4 max-w-2xl text-sm text-ink-muted">{doc.description}</p>
