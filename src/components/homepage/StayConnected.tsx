@@ -53,11 +53,13 @@ export function StayConnected() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder={t('emailPlaceholder')}
               className="w-full rounded-md border border-black/10 px-4 py-2.5 text-sm outline-none focus:border-brand-navy"
+              suppressHydrationWarning
             />
             <button
               type="submit"
               disabled={status === 'loading'}
               className="shrink-0 rounded-md bg-brand-navy px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-navy-dark disabled:opacity-60"
+              suppressHydrationWarning
             >
               {status === 'loading' ? tCommon('submitting') : t('subscribe')}
             </button>

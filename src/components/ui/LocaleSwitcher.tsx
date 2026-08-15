@@ -35,6 +35,7 @@ export function LocaleSwitcher() {
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
         className="rounded-full border border-black/10 p-2 hover:bg-surface-cream"
+        suppressHydrationWarning
       >
         <Globe size={16} className="text-ink-muted" />
       </button>
