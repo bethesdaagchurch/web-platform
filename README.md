@@ -1008,6 +1008,55 @@ known spot. Searched systematically across every component with no translation i
   the check that actually matters, since a broken translation key can silently fall back to
   showing English without erroring.
 
+## Three coordinated updates: Leadership Interest tracking, Group coordination, admin visibility
+
+**1. Leadership Interest now shows on the member's Dashboard.** The `LeadershipInterests`
+collection already tracked status (New/Contacted/Placed) and who submitted it — the only real
+gap was that `read` access was admin-only, so nothing could ever show it back to the member
+who submitted it. Extended access to the same per-document pattern `JoinRequests` already
+uses, added a new `MyLeadershipInterestCard`, wired it into the Dashboard. Confirmed the
+form's own immediate "thank you" already existed before touching anything — the actual,
+reported gap was specifically the missing persistent visibility, not the initial
+acknowledgment.
+
+**2. Groups now have a real detail page, with member coordination — privacy-gated.** There was
+no `/groups/[slug]` page at all before this, just the listing. Built one showing group info to
+everyone, and — only for a member confirmed to actually be part of that specific group — a
+list of fellow members. Deliberately names only, not email or phone numbers, since that's
+contact info nobody explicitly agreed to share with the whole group just by joining it.
+Wired `GroupCard`'s title to actually link there, since nothing did before. Caught and fixed a
+sloppy leftover of my own mid-build: an invisible, functionally pointless `sr-only` tag sitting
+where the leader's photo should have actually been rendered.
+
+- **Verified the privacy gating specifically, not just that the feature works for the right
+  person**: seeded two members in the same group and a third, unrelated member, then confirmed
+  both group members see each other correctly — but also confirmed a logged-out visitor *and*
+  a logged-in member who isn't in that group both see neither name, with a clear explanatory
+  message instead. The negative case is the one that actually matters for a privacy feature
+  like this.
+
+**3. A real "Needs Attention" panel on the admin dashboard.** Real email alerts to the admin
+still aren't possible without the domain-authenticated Brevo email setup discussed earlier —
+this is the realistic, buildable version in the meantime. Verified Payload's exact
+`beforeDashboard` component API directly from its own type definitions rather than guessing,
+built a server component that queries pending Join Requests and new Leadership Interest
+submissions and surfaces them right at the top of `/admin`, above the collection list, the
+moment it's opened.
+
+- **A genuinely new lesson for this project, worth remembering**: any Payload admin panel
+  component registered this way needs `payload generate:importmap` re-run afterward, or the
+  admin panel fails to load entirely — the same class of issue first discovered with the
+  Supabase Storage plugin's own upload-handler component, now confirmed to apply to
+  hand-built admin components too, not just third-party plugins.
+- A real lint error surfaced and fixed properly during this build: plain `<a>` tags triggered
+  Next.js's own `no-html-link-for-pages` rule, since this widget genuinely does live within
+  the same Next.js app — fixed with real `next/link` rather than suppressing the warning.
+- **Verified by actually clicking through, not just reading the panel's text**: seeded a real
+  pending join request and a real new leadership interest, confirmed the panel shows the
+  correct combined count and both individual counts, then clicked the join-request link
+  specifically and confirmed it lands on the correctly pre-filtered admin list showing that
+  exact request — not just that a link with the right label exists on the page.
+
 ## Loading state
 
 `src/app/[locale]/(site)/loading.tsx` uses Next's built-in convention: while any page under

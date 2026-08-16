@@ -473,7 +473,7 @@ export interface Group {
   leaderName: string;
   leaderPhoto?: (number | null) | Media;
   /**
-   * Powers a real mailto: link on "Join Group" — no request-to-join backend exists, so this is the honest, functional middle ground.
+   * Shown as a fallback contact on the group’s own page — joining itself now goes through the real Join Request system, not this email directly.
    */
   contactEmail: string;
   updatedAt: string;

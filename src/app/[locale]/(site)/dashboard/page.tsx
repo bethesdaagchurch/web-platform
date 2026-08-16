@@ -3,6 +3,7 @@ import { WelcomeHeader } from '@/components/dashboard/WelcomeHeader'
 import { MyGroupsCard } from '@/components/dashboard/MyGroupsCard'
 import { MyMinistriesCard } from '@/components/dashboard/MyMinistriesCard'
 import { MyRequestsCard } from '@/components/dashboard/MyRequestsCard'
+import { MyLeadershipInterestCard } from '@/components/dashboard/MyLeadershipInterestCard'
 import { VolunteerShiftCard } from '@/components/dashboard/VolunteerShiftCard'
 import { MyEventsCard } from '@/components/dashboard/MyEventsCard'
 import { MyRotaCard } from '@/components/dashboard/MyRotaCard'
@@ -18,6 +19,7 @@ import {
   adaptRegisteredEvents,
   adaptRotaAssignments,
   adaptPendingRequests,
+  adaptLeadershipInterests,
 } from '@/lib/dashboard-adapter'
 
 // Forces per-request dynamic rendering — see the Prayer page for the full
@@ -40,7 +42,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
   }
 
   const payload = await getPayloadClient()
-  const [sermonsResult, registrationsResult, rotaResult, requestsResult] = await Promise.all([
+  const [sermonsResult, registrationsResult, rotaResult, requestsResult, leadershipInterestsResult] = await Promise.all([
     payload.find({
       collection: 'sermons',
       locale: locale as 'en' | 'ta' | 'kn',
@@ -62,6 +64,11 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
       where: { member: { equals: member.id } },
       limit: 200,
     }),
+    payload.find({
+      collection: 'leadership-interests',
+      where: { submittedByMember: { equals: member.id } },
+      sort: '-createdAt',
+    }),
   ])
 
   const firstName = member.name.split(' ')[0]
@@ -80,6 +87,10 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
         <div className="mt-6 grid gap-6 md:grid-cols-2">
           <MyMinistriesCard ministries={adaptMinistries(member)} />
           <MyRequestsCard requests={adaptPendingRequests(requestsResult.docs)} />
+        </div>
+
+        <div className="mt-6">
+          <MyLeadershipInterestCard interests={adaptLeadershipInterests(leadershipInterestsResult.docs)} />
         </div>
 
         <div className="mt-6">

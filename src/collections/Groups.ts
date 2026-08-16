@@ -30,7 +30,7 @@ export const Groups: CollectionConfig = {
       name: 'contactEmail',
       type: 'email',
       required: true,
-      admin: { description: 'Powers a real mailto: link on "Join Group" — no request-to-join backend exists, so this is the honest, functional middle ground.' },
+      admin: { description: 'Shown as a fallback contact on the group\u2019s own page \u2014 joining itself now goes through the real Join Request system, not this email directly.' },
     },
   ],
 }

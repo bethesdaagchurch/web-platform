@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { Calendar, MapPin, User } from 'lucide-react'
+import { Link } from '@/i18n/navigation'
 import { MembersOnlyGate } from '@/components/auth/MembersOnlyGate'
 import { JoinRequestButton } from '@/components/shared/JoinRequestButton'
 import type { GroupListing } from '@/types/groups'
@@ -28,7 +29,9 @@ export function GroupCard({ group, member, joinStatus }: { group: GroupListing; 
         )}
       </div>
 
-      <h3 className="mt-3 text-lg font-semibold text-ink">{group.title}</h3>
+      <Link href={`/groups/${group.slug}`}>
+        <h3 className="mt-3 text-lg font-semibold text-ink hover:text-brand-navy">{group.title}</h3>
+      </Link>
       <p className="mt-1.5 text-sm text-ink-muted">{group.description}</p>
 
       <div className="mt-4 space-y-1.5 border-t border-black/5 pt-4 text-sm text-ink-muted">

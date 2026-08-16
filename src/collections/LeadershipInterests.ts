@@ -11,7 +11,14 @@ export const LeadershipInterests: CollectionConfig = {
     // Only a logged-in Member can create — mirrors the MembersOnlyGate in
     // the UI rather than leaving the API more permissive than the page.
     create: ({ req }) => req.user?.collection === 'members',
-    read: ({ req }) => req.user?.collection === 'users',
+    // Admins see everything; a member sees only their own submissions —
+    // same per-document query-constraint pattern as JoinRequests, which
+    // is what powers this showing up on a member's own Dashboard.
+    read: ({ req }) => {
+      if (req.user?.collection === 'users') return true
+      if (req.user?.collection === 'members') return { submittedByMember: { equals: req.user.id } }
+      return false
+    },
     update: ({ req }) => req.user?.collection === 'users',
     delete: ({ req }) => req.user?.collection === 'users',
   },

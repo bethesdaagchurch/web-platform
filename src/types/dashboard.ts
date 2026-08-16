@@ -53,3 +53,10 @@ export interface PendingRequestItem {
   targetName: string
   status: 'pending' | 'declined'
 }
+
+export interface LeadershipInterestItem {
+  id: string
+  areaOfInterest: string
+  status: 'new' | 'contacted' | 'placed'
+  createdAt: string
+}

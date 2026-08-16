@@ -319,7 +319,13 @@
     "notInMinistry": "You're not part of any ministries yet.",
     "myRequests": "My Requests",
     "requestPending": "Pending",
-    "requestDeclined": "Declined"
+    "requestDeclined": "Declined",
+    "myLeadershipInterest": "My Leadership Interest",
+    "leadershipStatus": {
+      "new": "Submitted",
+      "contacted": "We'll Be In Touch",
+      "placed": "Placed"
+    }
   },
   "rota": {
     "filters": "Filters",
@@ -490,5 +496,11 @@
     "confirmedHeading": "You're Confirmed!",
     "confirmedMessage": "Thank you for confirming your subscription. You’ll now receive our updates straight to your inbox.",
     "confirmedButton": "Back to Homepage"
+  },
+  "groupMembers": {
+    "heading": "Group Members",
+    "subtext": "Members of {group}, for coordination.",
+    "notAMemberYet": "Once your join request is approved, you'll see who else is in this group here.",
+    "backToGroups": "Back to Groups"
   }
 }

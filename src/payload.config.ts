@@ -94,6 +94,15 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
+    // Real email alerts to the admin aren't possible yet (no domain-
+    // authenticated email adapter configured — see the Forgot Password
+    // work for the full reasoning). This is the realistic, buildable
+    // version: pending items surface right at the top of /admin the
+    // moment it's opened, instead of needing to remember to check
+    // multiple collections manually.
+    components: {
+      beforeDashboard: ['/components/admin/NeedsAttentionWidget'],
+    },
   },
 
   editor: lexicalEditor(),

@@ -1,4 +1,4 @@
-import type { Member, Sermon, EventRegistration, WorshipRota, JoinRequest } from '@/payload-types'
+import type { Member, Sermon, EventRegistration, WorshipRota, JoinRequest, LeadershipInterest } from '@/payload-types'
 import type {
   GroupItem,
   VolunteerShiftData,
@@ -7,6 +7,7 @@ import type {
   RotaAssignmentItem,
   MinistryDashboardItem,
   PendingRequestItem,
+  LeadershipInterestItem,
 } from '@/types/dashboard'
 
 function mediaUrl(media: unknown, fallback: string): string {
@@ -112,4 +113,13 @@ export function adaptPendingRequests(requests: JoinRequest[]): PendingRequestIte
       targetName: r.target.relationTo === 'groups' ? (r.target.value as { title: string }).title : (r.target.value as { name: string }).name,
       status: r.status as 'pending' | 'declined',
     }))
+}
+
+export function adaptLeadershipInterests(interests: LeadershipInterest[]): LeadershipInterestItem[] {
+  return interests.map((interest) => ({
+    id: String(interest.id),
+    areaOfInterest: interest.areaOfInterest,
+    status: (interest.status ?? 'new') as 'new' | 'contacted' | 'placed',
+    createdAt: interest.createdAt,
+  }))
 }
