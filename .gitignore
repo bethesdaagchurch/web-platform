@@ -1,0 +1,29 @@
+node_modules
+.next
+out
+.env
+.env.local
+.env.prod
+.env.example
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+
+# Vercel CLI creates this locally when you run `vercel` commands to link
+# the project — machine-specific, nothing here is meant to be shared.
+.vercel
+
+# Debug logs from npm/yarn crashes.
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local HTTPS dev certificates, if ever used.
+*.pem
+
+# Payload local file uploads (dev only — production uses Supabase Storage,
+# see the TODO in src/collections/Media.ts) and any local test databases
+media/
+*.db
+*.db-shm
+*.db-wal
