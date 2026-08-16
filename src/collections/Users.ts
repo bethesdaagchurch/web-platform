@@ -9,5 +9,15 @@ export const Users: CollectionConfig = {
     useAsTitle: 'email',
   },
   auth: true,
-  fields: [],
+  fields: [
+    {
+      name: 'notificationsSeenAt',
+      type: 'date',
+      admin: {
+        hidden: true,
+        description:
+          'Internal bookkeeping for the "Needs Attention" dashboard panel \u2014 the timestamp of this admin\u2019s last visit to /admin. Items created before this stop showing until a new one arrives, even if still pending. Not meant for manual editing.',
+      },
+    },
+  ],
 }

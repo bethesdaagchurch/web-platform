@@ -82,16 +82,33 @@ export const JoinRequests: CollectionConfig = {
 
         const memberId = typeof doc.member === 'object' ? doc.member.id : doc.member
         const targetId = typeof doc.target.value === 'object' ? doc.target.value.id : doc.target.value
-        const fieldName = doc.target.relationTo === 'groups' ? 'myGroups' : 'myMinistries'
 
+        if (doc.target.relationTo === 'groups') {
+          // Groups.members is the real, admin-editable source of truth for
+          // group membership (Members.myGroups is a read-only join field
+          // derived from this) — so approval writes here, not to the member.
+          const group = await req.payload.findByID({ collection: 'groups', id: targetId, depth: 0 })
+          const currentMemberIds: number[] = (group.members || []) as number[]
+          if (!currentMemberIds.includes(memberId)) {
+            await req.payload.update({
+              collection: 'groups',
+              id: targetId,
+              data: { members: [...currentMemberIds, memberId] },
+            })
+          }
+          return
+        }
+
+        // Ministries kept as-is — myMinistries remains a regular,
+        // member-side-editable relationship, not converted to this
+        // group-side pattern, since only Groups needed this change.
         const member = await req.payload.findByID({ collection: 'members', id: memberId, depth: 0 })
-        const currentIds: number[] = (member[fieldName] || []) as number[]
-
+        const currentIds: number[] = (member.myMinistries || []) as number[]
         if (!currentIds.includes(targetId)) {
           await req.payload.update({
             collection: 'members',
             id: memberId,
-            data: { [fieldName]: [...currentIds, targetId] },
+            data: { myMinistries: [...currentIds, targetId] },
           })
         }
       },

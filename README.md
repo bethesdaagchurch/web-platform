@@ -1057,6 +1057,51 @@ moment it's opened.
   specifically and confirmed it lands on the correctly pre-filtered admin list showing that
   exact request — not just that a link with the right label exists on the page.
 
+## Group Members: a real bug found and fixed, and a "seen" notification behavior built as discussed
+
+**Group Members turned out to already exist** — `Groups.members` (a real, admin-editable
+relationship field, with `Members.myGroups` correctly set up as a derived, read-only `join`
+field pointing back to it) and the Join Request approval hook already wrote to it correctly.
+This was from earlier work not fully visible going into this round. Rather than assume it
+worked and move on, it got the same scrutiny as everything else in this project.
+
+- **A real, would-have-crashed-at-runtime bug found and fixed in three places.** A `join`
+  field like `myGroups` returns `{docs, hasNextPage, totalDocs}`, not a plain array — but
+  three separate places (`adaptGroups` on the Dashboard, `getJoinStatus`'s "already a member"
+  check, and the group detail page's own membership check) all called array methods
+  (`.length`, `.filter`, `.some`) directly on it, which the build's own type checker caught
+  as a genuine compile error once types were regenerated. Fixed by reading `.docs` instead —
+  the array is one level deeper than the earlier code assumed. Simplified the group detail
+  page's fellow-members list to read `doc.members` directly from the already-fetched group
+  document too, removing a redundant second query that existed only because the correct,
+  simpler path hadn't been used.
+- **Re-verified the whole pipeline afterward using data seeded exactly the way an admin
+  actually would** — directly setting `Groups.members` on creation, not through any
+  member-side workaround — and confirmed a member in that group sees their group correctly
+  on the Dashboard, sees themselves and their fellow member on the group's own page, and
+  that a logged-out visitor *and* a logged-in outsider both see neither name, tested with
+  fresh, isolated browser sessions specifically to rule out any session-carryover false
+  positives in the test itself.
+
+**The admin "Needs Attention" panel now behaves exactly as discussed and confirmed**: once an
+admin has seen a pending item, it stops appearing on their next visit — even though it's still
+genuinely unresolved — until something new comes in. This was a deliberate choice made after
+flagging the real trade-off (an admin could forget about something once it's no longer
+visible); implemented as asked, not overridden.
+
+- Added a `notificationsSeenAt` timestamp to admin accounts specifically (not a global,
+  shared setting), so multiple admins each get their own independent "have I seen this" state
+  rather than one admin's visit silently clearing it for everyone else.
+- **Verified the full three-visit sequence for real, not just the mechanism in isolation**:
+  seeded one pending request, confirmed the first admin visit shows it; reloaded the
+  dashboard and confirmed that same still-pending request correctly disappeared on the second
+  visit; then seeded a second, genuinely new request and confirmed the panel reappeared
+  showing exactly that one new item — not both, proving the already-seen one correctly stayed
+  suppressed rather than the whole mechanism just resetting.
+- A real type error surfaced and fixed along the way: an empty-object fallback for "no prior
+  visit yet" didn't satisfy Payload's `Where` query type — fixed by building the query
+  conditionally instead of always including a possibly-empty clause.
+
 ## Loading state
 
 `src/app/[locale]/(site)/loading.tsx` uses Next's built-in convention: while any page under

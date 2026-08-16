@@ -90,7 +90,11 @@ export interface Config {
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
   };
-  collectionsJoins: {};
+  collectionsJoins: {
+    members: {
+      myGroups: 'groups';
+    };
+  };
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
@@ -204,6 +208,10 @@ export interface MemberAuthOperations {
  */
 export interface User {
   id: number;
+  /**
+   * Internal bookkeeping for the "Needs Attention" dashboard panel — the timestamp of this admin’s last visit to /admin. Items created before this stop showing until a new one arrives, even if still pending. Not meant for manual editing.
+   */
+  notificationsSeenAt?: string | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -401,9 +409,13 @@ export interface Member {
   name: string;
   avatar?: (number | null) | Media;
   /**
-   * Select from the real Groups collection — schedule and location are pulled from the group itself, not re-entered here. Also populated automatically when a Join Request for this member is approved — see the Join Requests collection.
+   * Read-only here — automatically reflects whichever Groups have this member in their own "Members" field. To change a member’s group membership, edit it from the Group’s own page instead, or approve/decline their Join Request.
    */
-  myGroups?: (number | Group)[] | null;
+  myGroups?: {
+    docs?: (number | Group)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
   /**
    * Populated automatically when a Join Request for this member is approved — see the Join Requests collection. Editable here directly too, if a membership needs adding or removing outside that flow.
    */
@@ -476,6 +488,10 @@ export interface Group {
    * Shown as a fallback contact on the group’s own page — joining itself now goes through the real Join Request system, not this email directly.
    */
   contactEmail: string;
+  /**
+   * The real member accounts in this group — this is the source of truth for group membership, editable directly here. Automatically added to when a Join Request for this group is approved (see the Join Requests collection); can also be added or removed manually here at any time.
+   */
+  members?: (number | Member)[] | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -867,6 +883,7 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  notificationsSeenAt?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -1070,6 +1087,7 @@ export interface GroupsSelect<T extends boolean = true> {
   leaderName?: T;
   leaderPhoto?: T;
   contactEmail?: T;
+  members?: T;
   updatedAt?: T;
   createdAt?: T;
 }

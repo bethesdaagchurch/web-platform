@@ -48,17 +48,15 @@ export default async function GroupDetailPage({
   const t = await getTranslations('groupMembers')
 
   const isInThisGroup =
-    member?.myGroups?.some((g) => (typeof g === 'object' ? g.id : g) === doc.id) ?? false
+    member?.myGroups?.docs?.some((g) => (typeof g === 'object' ? g.id : g) === doc.id) ?? false
 
+  // Reading doc.members directly — the group document already has this
+  // populated from the initial fetch, so there's no need for a second,
+  // separate query. Groups.members is the real source of truth (see the
+  // Groups collection's own field description); the member-side myGroups
+  // used for isInThisGroup above is a derived, read-only join field.
   const fellowMembers = isInThisGroup
-    ? (
-        await payload.find({
-          collection: 'members',
-          where: { myGroups: { in: [doc.id] } },
-          limit: 100,
-          depth: 0,
-        })
-      ).docs
+    ? ((doc.members ?? []).filter((m): m is Exclude<typeof m, number> => typeof m === 'object'))
     : []
 
   const leaderPhoto = doc.leaderPhoto && typeof doc.leaderPhoto === 'object' ? doc.leaderPhoto.url : null

@@ -1,11 +1,38 @@
 import type { ServerProps } from 'payload'
 import Link from 'next/link'
 
-export default async function NeedsAttentionWidget({ payload }: ServerProps) {
+export default async function NeedsAttentionWidget({ payload, user }: ServerProps) {
+  // The admin's own explicit choice (confirmed after flagging the
+  // trade-off): once seen, an item stops showing here even while still
+  // pending, until something newer arrives. Reading the OLD value before
+  // overwriting it below is what makes "since last visit" work correctly.
+  const previouslySeenAt = user && 'notificationsSeenAt' in user ? (user.notificationsSeenAt as string | undefined) : undefined
+
   const [pendingRequests, newLeadershipInterests] = await Promise.all([
-    payload.find({ collection: 'join-requests', where: { status: { equals: 'pending' } }, limit: 10, sort: '-createdAt' }),
-    payload.find({ collection: 'leadership-interests', where: { status: { equals: 'new' } }, limit: 10, sort: '-createdAt' }),
+    payload.find({
+      collection: 'join-requests',
+      where: previouslySeenAt
+        ? { and: [{ status: { equals: 'pending' } }, { createdAt: { greater_than: previouslySeenAt } }] }
+        : { status: { equals: 'pending' } },
+      limit: 10,
+      sort: '-createdAt',
+    }),
+    payload.find({
+      collection: 'leadership-interests',
+      where: previouslySeenAt
+        ? { and: [{ status: { equals: 'new' } }, { createdAt: { greater_than: previouslySeenAt } }] }
+        : { status: { equals: 'new' } },
+      limit: 10,
+      sort: '-createdAt',
+    }),
   ])
+
+  // Recorded now, using this same request — so the NEXT visit's query
+  // above will correctly exclude everything just shown, matching "don't
+  // pop up again until something new arrives" exactly as described.
+  if (user?.id) {
+    await payload.update({ collection: 'users', id: user.id, data: { notificationsSeenAt: new Date().toISOString() } })
+  }
 
   const totalCount = pendingRequests.totalDocs + newLeadershipInterests.totalDocs
   if (totalCount === 0) return null
@@ -24,8 +51,10 @@ export default async function NeedsAttentionWidget({ payload }: ServerProps) {
         Needs Attention ({totalCount})
       </p>
       <p style={{ fontSize: 13, color: '#555', marginBottom: 12 }}>
-        Real email alerts aren&apos;t set up yet — this is where pending items show up in the
-        meantime, right when you open the admin.
+        Real email alerts aren&apos;t set up yet — this is where new items show up in the
+        meantime. Once you&apos;ve seen an item here, it won&apos;t show again until something
+        new comes in — check the Join Requests and Leadership Interests collections directly
+        for anything still sitting unresolved from before.
       </p>
 
       {pendingRequests.totalDocs > 0 && (
@@ -46,3 +75,4 @@ export default async function NeedsAttentionWidget({ payload }: ServerProps) {
     </div>
   )
 }
+

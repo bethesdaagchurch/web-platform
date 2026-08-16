@@ -31,8 +31,12 @@ export function getJoinStatus(
 ): JoinStatus {
   if (!member) return 'none'
 
-  const approvedList = type === 'groups' ? member.myGroups : member.myMinistries
-  const isApproved = (approvedList ?? []).some((item) => (typeof item === 'object' ? item.id : item) === Number(targetId))
+  // myGroups is a `join` field, so it comes back as {docs, hasNextPage,
+  // totalDocs} rather than a plain array — myMinistries is a regular
+  // relationship field and stays a plain array. Normalized to a plain
+  // array here so both branches compare the same shape below.
+  const approvedList = type === 'groups' ? (member.myGroups?.docs ?? []) : (member.myMinistries ?? [])
+  const isApproved = approvedList.some((item) => (typeof item === 'object' ? item.id : item) === Number(targetId))
   if (isApproved) return 'approved'
 
   return requestStatusMap[key(type, targetId)] ?? 'none'

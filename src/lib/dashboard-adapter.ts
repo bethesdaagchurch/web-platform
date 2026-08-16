@@ -16,8 +16,9 @@ function mediaUrl(media: unknown, fallback: string): string {
 }
 
 export function adaptGroups(member: Member): GroupItem[] {
-  if (!member.myGroups || member.myGroups.length === 0) return []
-  return member.myGroups
+  const docs = member.myGroups?.docs ?? []
+  if (docs.length === 0) return []
+  return docs
     // A relationship field can come back as a bare numeric ID instead of
     // the populated document if something ever queries with insufficient
     // depth — skip those defensively rather than crash on `.title`.

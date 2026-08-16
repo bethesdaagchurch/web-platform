@@ -32,5 +32,15 @@ export const Groups: CollectionConfig = {
       required: true,
       admin: { description: 'Shown as a fallback contact on the group\u2019s own page \u2014 joining itself now goes through the real Join Request system, not this email directly.' },
     },
+    {
+      name: 'members',
+      type: 'relationship',
+      relationTo: 'members',
+      hasMany: true,
+      admin: {
+        description:
+          'The real member accounts in this group \u2014 this is the source of truth for group membership, editable directly here. Automatically added to when a Join Request for this group is approved (see the Join Requests collection); can also be added or removed manually here at any time.',
+      },
+    },
   ],
 }

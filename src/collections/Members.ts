@@ -22,13 +22,13 @@ export const Members: CollectionConfig = {
     { name: 'avatar', type: 'upload', relationTo: 'media' },
     {
       name: 'myGroups',
-      type: 'relationship',
-      relationTo: 'groups',
-      hasMany: true,
+      type: 'join',
+      collection: 'groups',
+      on: 'members',
       label: 'Groups this member belongs to',
       admin: {
         description:
-          'Select from the real Groups collection — schedule and location are pulled from the group itself, not re-entered here. Also populated automatically when a Join Request for this member is approved — see the Join Requests collection.',
+          'Read-only here \u2014 automatically reflects whichever Groups have this member in their own "Members" field. To change a member\u2019s group membership, edit it from the Group\u2019s own page instead, or approve/decline their Join Request.',
       },
     },
     {
