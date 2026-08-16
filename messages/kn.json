@@ -10,7 +10,9 @@
   "header": {
     "login": "ಲಾಗಿನ್",
     "give": "ಕೊಡಿ",
-    "languageLabel": "ಭಾಷೆ ಬದಲಾಯಿಸಿ"
+    "languageLabel": "ಭಾಷೆ ಬದಲಾಯಿಸಿ",
+    "openMenu": "ಮೆನು ತೆರೆಯಿರಿ",
+    "closeMenu": "ಮೆನು ಮುಚ್ಚಿ"
   },
   "footer": {
     "connectHeading": "ಸಂಪರ್ಕದಲ್ಲಿರಿ",

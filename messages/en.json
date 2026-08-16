@@ -10,7 +10,9 @@
   "header": {
     "login": "Login",
     "give": "Give",
-    "languageLabel": "Change language"
+    "languageLabel": "Change language",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "footer": {
     "connectHeading": "Connect",

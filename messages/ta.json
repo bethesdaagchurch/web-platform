@@ -10,7 +10,9 @@
   "header": {
     "login": "உள்நுழைவு",
     "give": "கொடுங்கள்",
-    "languageLabel": "மொழியை மாற்று"
+    "languageLabel": "மொழியை மாற்று",
+    "openMenu": "மெனுவைத் திற",
+    "closeMenu": "மெனுவை மூடு"
   },
   "footer": {
     "connectHeading": "இணையுங்கள்",

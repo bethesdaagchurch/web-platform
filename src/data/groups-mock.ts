@@ -30,6 +30,7 @@ export const groupListings: GroupListing[] = [
     leaderPhoto: '/images/group-leader-david.jpg',
     category: 'care-groups',
     contactEmail: 'downtown@bethesdaag.church',
+    members: [],
   },
   {
     id: 'growing-together',
@@ -43,6 +44,7 @@ export const groupListings: GroupListing[] = [
     leaderPhoto: '/images/group-leader-mark-sarah.jpg',
     category: 'care-groups',
     contactEmail: 'families@bethesdaag.church',
+    members: [],
   },
   {
     id: 'morning-manna',
@@ -55,6 +57,7 @@ export const groupListings: GroupListing[] = [
     leaderName: 'Elder James',
     category: 'care-groups',
     contactEmail: 'morningmanna@bethesdaag.church',
+    members: [],
   },
 ]
 

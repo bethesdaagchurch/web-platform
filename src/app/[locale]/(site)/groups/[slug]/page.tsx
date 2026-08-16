@@ -63,7 +63,7 @@ export default async function GroupDetailPage({
 
   return (
     <div className="mx-auto max-w-content px-6 py-16">
-      <Link href="/groups" className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-brand-navy hover:underline">
+      <Link href="/groups" className="mb-6 flex w-fit items-center gap-1.5 text-sm font-medium text-brand-navy hover:underline">
         <ArrowLeft size={16} /> {t('backToGroups')}
       </Link>
 

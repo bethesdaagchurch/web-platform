@@ -1102,6 +1102,101 @@ visible); implemented as asked, not overridden.
   visit yet" didn't satisfy Payload's `Where` query type — fixed by building the query
   conditionally instead of always including a possibly-empty clause.
 
+## Group member roster moved to the Groups listing cards themselves
+
+Clarified directly: the member roster belongs on each Group's own card on the `/groups`
+listing page, positioned specifically between "Led by" and the Join/Already-a-Member button —
+not on the separate detail page built two rounds ago, which stays as-is for browsing a
+group's full info.
+
+- Added `members` to `GroupListing` (the type each card renders from) and the groups adapter,
+  reading directly from `Groups.members` — the same real, admin-editable field already
+  confirmed working last round, no new backend piece needed here.
+- **The privacy gating is computed per-card, not per-page** — a member could be shown several
+  groups at once on this same listing, and should only see the roster for the ones they're
+  actually part of. Verified this specifically, not just the single-group case: seeded two
+  separate groups with different members, logged in as someone in only one of them, and
+  confirmed their fellow group member's name appears on that group's card while the *other*
+  group's card — visible on the same page, at the same time — shows no roster at all, going
+  straight from "Led by" to "Join Group" exactly as it would for someone who'd never
+  logged in. Also confirmed a fully logged-out visitor sees no roster on either card.
+
+## Critical fix: mobile navigation was completely inaccessible
+
+Reported directly from checking the live site on a real phone: the entire header menu was
+hidden, no way to navigate anywhere. Confirmed the cause immediately in the code — `<nav
+className="hidden items-center gap-8 md:flex">` hides the nav completely below the `md`
+breakpoint (768px, effectively every phone), with no mobile alternative ever built. Worth
+being honest about rather than glossing over: this slipped through this project's entire
+history of testing because every Playwright check throughout has used desktop-sized viewports
+— nothing was ever actually checked at a phone-sized width until this was reported.
+
+- Added a standard hamburger menu, visible only below `md`, opening a full-width panel with
+  every nav link, Login or the member's name, Dashboard, Log out, the language switcher, and
+  Give — everything the desktop header offers, not just the page links.
+- **A second, related bug found and fixed while testing this, not assumed to just work**:
+  reusing the existing `MemberMenu` dropdown inside the new mobile panel technically worked,
+  but its member-name text had `hidden ... sm:inline` baked in from when it was only ever
+  shown in the compact desktop header — on a real phone-width screen, a logged-in member's
+  name silently didn't appear at all inside their own mobile menu. Beyond that, reusing a
+  dropdown-that-requires-a-tap-to-open inside a panel that's already the "opened" state would
+  have meant two taps to reach Dashboard or Log out. Rebuilt this section to show the name,
+  Dashboard, and Log out directly and stacked instead, matching the rest of the mobile panel,
+  with its own logout handler rather than nesting the desktop dropdown component inside it.
+- Verified thoroughly at an actual mobile viewport width (375\u00d7812), not just that the code
+  compiled: confirmed the hamburger appears and the nav is genuinely reachable, confirmed
+  clicking a link actually navigates and the menu auto-closes afterward, confirmed a
+  logged-in member's real name now appears correctly with working Dashboard and Log out
+  (tested by actually logging out and confirming the session really ended, not just that the
+  button existed), and separately confirmed desktop is completely unaffected \u2014 the hamburger
+  stays hidden there and the original horizontal nav still shows directly with no interaction
+  needed. Also confirmed the mobile menu labels render correctly in Tamil.
+
+## Full mobile compatibility audit across the site
+
+Requested after the header fix, with an explicit constraint: fix mobile without touching the
+desktop experience at all. Approached in two passes — a static code search for the exact bug
+pattern that caused the header issue (content hidden below a breakpoint with no alternative
+shown), then systematic visual testing at a real 375px mobile viewport across every major page,
+since layout and spacing problems don't show up in a code search the way visibility bugs do.
+
+**The static search found no other instances of the header's specific bug** — two files matched
+the search pattern, and both turned out to be non-issues on inspection: one was a false-positive
+regex match on "overflow-hidden" (an unrelated CSS utility that happens to contain the substring
+"hidden"), and the other was a deliberately documented, genuinely safe choice — a decorative
+timeline connector line hidden on mobile, with none of the actual milestone content affected.
+
+**Three real, distinct bugs found through the visual pass and fixed**, all verified on both
+mobile and desktop afterward, not just re-read in code:
+
+- **Dashboard cards had no minimum spacing between title and link** — "My Registered
+  EventsBrowse Events" was visibly running together, since `justify-between` alone provides no
+  spacing floor once combined text length eats up the available width. Fixed consistently
+  across all five dashboard cards sharing this exact header pattern (Events, Groups, Ministries,
+  Rota, Volunteer Shift) with `flex-wrap` plus an explicit gap, not just the one card that
+  happened to visibly break — the others could fail the same way under longer Tamil or Kannada
+  translations even though English text fit today.
+- **The Groups listing page showed its filter sidebar above the page's own hero and title on
+  mobile** — a visitor would see filter buttons before knowing what page they were even on.
+  Root cause: a two-column desktop grid collapsing to a single column naturally stacks in DOM
+  order unless explicitly told otherwise. Fixed with the standard CSS `order` utility pattern —
+  sidebar shows after the main content on mobile, stays visually first (left) on desktop
+  exactly as before.
+- **The Worship Rota page (`/ministries/rota`) had this identical sidebar-ordering bug** — found
+  by systematically checking every component sharing the same fixed-width-sidebar grid pattern
+  rather than assuming the issue was unique to Groups. Fixed the same way.
+- **A fourth, smaller spacing bug** on the group detail page: "Back to Groups" and the category
+  badge were crowding onto the same line with no space between them, since both were inline-level
+  elements and a margin-bottom alone doesn't force a line break between inline siblings. Checked
+  whether the Events detail page had the same issue (it uses an identical-looking pattern) and
+  confirmed it didn't — Events wraps its back-link in its own block-level container, which
+  already forces the break; Groups' link and badge were direct siblings with no such wrapper.
+  Fixed by changing the link from `inline-flex` to a `flex w-fit` block-level element instead.
+
+**Every fix was screenshotted on both a real mobile viewport and desktop afterward**, specifically
+to catch any accidental impact on the desktop experience given that was an explicit requirement
+going in — every desktop screenshot came back visually identical to before each fix.
+
 ## Loading state
 
 `src/app/[locale]/(site)/loading.tsx` uses Next's built-in convention: while any page under

@@ -12,6 +12,11 @@ export interface GroupCategoryOption {
   label: string
 }
 
+export interface GroupMemberSummary {
+  id: string
+  name: string
+}
+
 export interface GroupListing {
   id: string
   slug: string
@@ -24,6 +29,7 @@ export interface GroupListing {
   leaderPhoto?: string
   category: GroupCategoryValue
   contactEmail: string
+  members: GroupMemberSummary[]
 }
 
 export interface GroupsQuoteData {

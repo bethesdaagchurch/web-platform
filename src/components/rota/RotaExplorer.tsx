@@ -46,8 +46,12 @@ export function RotaExplorer({
 
   return (
     <div className="grid gap-6 md:grid-cols-[220px_1fr]">
-      {/* Filters sidebar */}
-      <div className="space-y-6">
+      {/* Filters sidebar — order-2/order-1 below for the same reason as
+          the Groups page's sidebar: shown after the rota list on mobile
+          instead of before it, so a visitor sees the actual schedule
+          first rather than filter controls with nothing to filter yet
+          visible above them. Still visually first (left) on desktop. */}
+      <div className="order-2 space-y-6 md:order-1">
         <div className="rounded-card bg-white p-5 shadow-sm ring-1 ring-black/5">
           <h2 className="text-lg font-semibold text-ink">{t('filters')}</h2>
 
@@ -95,7 +99,7 @@ export function RotaExplorer({
       </div>
 
       {/* Rota list */}
-      <div>
+      <div className="order-1 md:order-2">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-brand-gold">{t('ministrySchedule')}</p>
