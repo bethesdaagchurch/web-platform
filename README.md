@@ -1197,6 +1197,132 @@ mobile and desktop afterward, not just re-read in code:
 to catch any accidental impact on the desktop experience given that was an explicit requirement
 going in — every desktop screenshot came back visually identical to before each fix.
 
+## Critical security fix: any logged-in Member could grant themselves full admin access
+
+Found while answering a direct question about how admin access actually works — asked, then
+verified rather than just explained from memory, since the stakes of being wrong either
+direction (falsely reassuring or falsely alarming) were too high to guess at.
+
+**The `Users` (admin) collection had no explicit `access` block at all.** Payload's own default
+access rule for a collection with none specified is `Boolean(req.user)` — true for *any*
+authenticated session, regardless of which collection it belongs to. Since `Members` also has
+`auth: true`, a regular church member logging in through the public `/create-account` flow — with
+zero admin intent — satisfied that same check. Confirmed this for real, not just reasoned about
+it: created a genuine test Member account, logged in as that member (no admin privileges granted
+anywhere), and sent one direct `fetch` request to `/api/users` from the browser console. It
+returned `201 Created` with a brand-new, fully-privileged admin account using credentials of the
+attacker's own choosing. No admin panel access, no special tooling — just a logged-in member and
+one API call.
+
+- **Fixed by adding explicit access control** requiring `req.user?.collection === 'users'` for
+  `create`, `read`, `update`, and `delete` — matching the same pattern already used throughout
+  this project for sensitive collections like `Donations`. This collection had been treated as
+  "foundational plumbing" from very early on and never gotten the same access-control review as
+  more feature-oriented collections since.
+- **Re-ran the identical attack after the fix and confirmed it now correctly fails** — the exact
+  same request now returns `403 Forbidden`, "You are not allowed to perform this action."
+- **Three separate legitimate-use checks, specifically to confirm nothing else broke while fixing
+  this**: confirmed an existing, genuine admin can still log in and view the Users collection
+  normally; confirmed Payload's own built-in "create first user" bootstrap screen — the intended,
+  one-time way to create the very first admin account on a brand-new deployment — still appears
+  correctly for a genuinely empty `Users` collection and completes successfully end to end;
+  and confirmed that bootstrap door correctly stays permanently shut on a second visit once an
+  admin account exists, exactly as it did before this change. This bootstrap mechanism uses a
+  separate code path from the normal `create` access rule (verified directly in Payload's own
+  source), so it was never at risk from either the original vulnerability or this fix.
+
+For anyone reading this who deployed before this fix landed: it's worth checking your production
+Users collection for any account you don't recognize.
+
+## First-admin race condition — a real follow-up concern, closed with a script
+
+A sharp, well-reasoned follow-up to the access-control fix above: Payload's public "create
+first admin" screen is only safe for the brief window between a fresh deploy going live and
+someone actually claiming it. If anyone else — a bot scanning for exposed `/admin` panels, for
+instance — finds that URL first, they claim the admin account instead, and since that bootstrap
+door locks permanently the instant it's used, the real owner would be genuinely locked out with
+no way back in through that path. This is a real, documented class of vulnerability, not
+something to dismiss as unlikely.
+
+**The fix isn't a code change — it's eliminating the window entirely.** Added
+`scripts/seed-first-admin.ts`, a one-time utility that creates the admin account directly via
+Payload's Local API, meant to be run immediately after migrations, before the site is ever
+shared with anyone. By the time a stranger could possibly find the URL, there's nothing left
+for them to claim — the bootstrap door is already closed.
+
+- **A real mistake caught and corrected immediately, not left standing**: initially suggested a
+  `payload create-first-user` CLI command without verifying it actually existed. Checked
+  Payload's real CLI command list directly afterward and confirmed no such command exists —
+  corrected this immediately with the actual, verified approach (the Local API script) rather
+  than let an unverified command stand as guidance for a security-sensitive operation.
+- **The script includes its own safety guard**: refuses to run at all if the Users collection
+  already has any record, so it can't accidentally be pointed at a database that already has a
+  real admin and create a redundant or conflicting account.
+- **Verified end to end against a genuinely fresh, empty test database**: ran the script once
+  and confirmed it created a real, working admin account; ran it again immediately afterward
+  and confirmed the safety guard correctly refused, with a clear message explaining why; then
+  logged in through the actual admin panel using the seeded account's credentials and confirmed
+  it works exactly like any normally-created admin — not just that the database record existed,
+  but that real authentication succeeds with it.
+- **This is a reusable tool for this project going forward**, not a one-off fix — the same race
+  condition would apply again for any future fresh database (a new staging environment, or
+  production ever being rebuilt from scratch), and this script is meant to be the standard way
+  to handle that moment from now on rather than relying on the public bootstrap screen.
+
+## Closing the race condition for real: the public bootstrap path is now blocked entirely
+
+A sharp, correct follow-up to the section above: the seed script only helps you *win* the race
+against the public bootstrap screen — it doesn't remove the screen itself. Asked directly
+whether it had been removed, and the honest answer was no. Fixed properly this round, in
+`src/middleware.ts`, with two real bugs found and fixed along the way through direct testing
+rather than assumption.
+
+- **First attempt caused a genuine infinite redirect loop.** Redirecting the blocked page to
+  another `/admin/*` path (specifically `/admin/login`) resulted in a blank, non-functional
+  page. Investigated with real navigation tracking rather than guessing — confirmed over 60
+  rapid navigations to the same URL in seconds. Payload's own client-side admin code sees the
+  Users collection is still empty and keeps trying to route back to the bootstrap screen,
+  fighting the redirect forever. Fixed by redirecting to the homepage instead, entirely outside
+  Payload's own admin route tree, which sidesteps that fight completely — confirmed with the
+  same navigation tracking that it now resolves in exactly two clean navigations.
+- **Blocking the page alone was confirmed insufficient — not assumed to be enough.** Directly
+  tested whether the underlying API endpoint the page itself calls
+  (`/api/users/first-register`) could still be reached with a raw request, bypassing the UI
+  entirely. It could — the exact same attack from two rounds ago succeeded again, just through
+  a different door. Fixed by blocking that specific API path in the same middleware, returning
+  a plain 404 rather than any response that would hint at what it's protecting.
+- **Every legitimate path re-verified afterward, together, on a genuinely fresh empty
+  database**: confirmed the bootstrap page redirects cleanly with no loop, confirmed the API
+  endpoint correctly returns 404, confirmed `scripts/seed-first-admin.ts` still successfully
+  creates a real admin account, and confirmed that seeded account still logs in normally through
+  the real admin panel — the full, correct sequence working end to end with both blocks in
+  place, not just each piece checked in isolation.
+
+With this in place, the only way to create the first admin account on a fresh database is now
+`scripts/seed-first-admin.ts` — there is no public path left to race against.
+
+## One more edge case checked directly: bare /admin, not just the bootstrap sub-path
+
+Asked directly to confirm this understanding rather than assumed correct: does the block also
+cover someone simply visiting `/admin` itself, not the specific `/admin/create-first-user`
+URL? Worth checking specifically, since the middleware's matcher excludes all of `/admin` by
+default, with only that one sub-path carved out as an exception.
+
+- **Confirmed correct, but only after catching a real bug along the way**: the first test of
+  this showed a genuine server-side crash ("Application error") rather than a clean result.
+  Investigated the actual server log rather than accepting the crash as some kind of
+  coincidence — the real cause was unrelated to this fix, a sandbox database that had lost its
+  tables between test rounds. Restored it properly and re-tested rather than reporting the
+  crash as if it reflected the real, shipped behavior.
+- **With the database properly in its intended state**, visiting bare `/admin` on a fresh,
+  empty database correctly redirects all the way to the homepage — Payload's own internal
+  logic for that root path depends on the same resources already blocked, so the protection
+  extends there without any additional code needed.
+- **Confirmed the full, correct sequence together, not each piece in isolation**: bare `/admin`
+  redirects safely before any admin exists; running `scripts/seed-first-admin.ts` still
+  succeeds; and after that, `/admin` correctly shows Payload's genuine login screen — confirmed
+  visually, not just by checking the URL — with that seeded account logging in successfully.
+
 ## Loading state
 
 `src/app/[locale]/(site)/loading.tsx` uses Next's built-in convention: while any page under
