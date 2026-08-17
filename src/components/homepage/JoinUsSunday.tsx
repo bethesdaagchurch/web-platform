@@ -12,7 +12,7 @@ export async function JoinUsSunday({ times }: { times: ServiceTime[] }) {
       <div className="grid gap-10 md:grid-cols-2 md:items-center">
         <div className="relative overflow-hidden rounded-card">
           <Image
-            src="/images/live-preview.jpg"
+            src="/images/joinussunday.jpg"
             alt="Congregation gathered for worship"
             width={640}
             height={420}
