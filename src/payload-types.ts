@@ -209,6 +209,10 @@ export interface MemberAuthOperations {
 export interface User {
   id: number;
   /**
+   * Only a super admin can create, edit, or delete other admin accounts — a regular admin can only edit their own. Only a super admin can change this field, including their own.
+   */
+  role: 'admin' | 'super-admin';
+  /**
    * Internal bookkeeping for the "Needs Attention" dashboard panel — the timestamp of this admin’s last visit to /admin. Items created before this stop showing until a new one arrives, even if still pending. Not meant for manual editing.
    */
   notificationsSeenAt?: string | null;
@@ -883,6 +887,7 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  role?: T;
   notificationsSeenAt?: T;
   updatedAt?: T;
   createdAt?: T;

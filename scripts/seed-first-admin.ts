@@ -10,6 +10,11 @@
 // admin account gets created server-side, before the site is ever
 // shared with anyone, so there's nothing left for a stranger to claim.
 //
+// This account is always created as super-admin — the account this
+// script creates is the church's own, ultimate account, not one of
+// potentially several regular admins it will go on to create through
+// the normal /admin UI once logged in.
+//
 // Run this LOCALLY, with your production DATABASE_URI set in the
 // environment you run it from — right after running migrations, before
 // sharing the URL with anyone. Never commit real credentials.
@@ -41,6 +46,6 @@ if (existing.totalDocs > 0) {
   process.exit(1)
 }
 
-await payload.create({ collection: 'users', data: { email, password } })
-console.log(`Admin account created: ${email}`)
+await payload.create({ collection: 'users', data: { email, password, role: 'super-admin' } })
+console.log(`Super admin account created: ${email}`)
 process.exit(0)

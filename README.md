@@ -1323,6 +1323,57 @@ default, with only that one sub-path carved out as an exception.
   succeeds; and after that, `/admin` correctly shows Payload's genuine login screen — confirmed
   visually, not just by checking the URL — with that seeded account logging in successfully.
 
+## Two-tier admin roles: super admin and admin
+
+Proposed directly, with a clear governance model already sketched out: a super admin created
+only by the seed script, regular admins created by that super admin, and a super admin
+protected from being edited or deleted by anyone else. Discussed three real open questions
+before building (can regular admins manage each other, can a super admin promote someone else,
+should a super admin be blocked from deleting themselves) rather than assuming answers to
+decisions that would be awkward to reverse later.
+
+- **Only a super admin can create new admin accounts** through the normal UI/API — a regular
+  admin attempting this gets a clean 403, verified directly with a real API call, not assumed
+  from reading the access rule.
+- **A regular admin can only update their own record** — enforced as a database-level query
+  constraint, not just a UI restriction, so it holds even against a direct API call bypassing
+  the admin panel entirely. Verified a regular admin genuinely cannot update the super admin's
+  record, and genuinely can update their own.
+- **Field-level protection against self-promotion, verified against the actual database, not
+  just the API response**: a regular admin can update other fields on their own record (their
+  email, for instance) but their `role` field specifically is protected — Payload's real
+  behavior here is to silently drop the unauthorized field from the update rather than reject
+  the whole request, so the self-promotion attempt actually returns a `200` with the *rest* of
+  the update applied. Caught this nuance by checking the stored role directly in the database
+  afterward rather than trusting the API's response body, which could have looked like success.
+- **Only a super admin can delete any admin account**, and a regular admin can't delete anyone,
+  including themselves.
+- **A super admin can promote a regular admin to super admin** — confirmed this works, and
+  confirmed the resulting account genuinely has elevated permissions afterward, not just the
+  label.
+- **The "never lose the last super admin" safeguard**, built as two hooks (`beforeDelete` and
+  `beforeChange`) rather than a simpler blanket rule, specifically because the real risk is
+  reaching zero super admins, not any single action in isolation — with two super admins,
+  demoting one back to a regular admin correctly succeeds; with only one remaining, both
+  deleting *and* demoting that account are correctly blocked. Tested both paths specifically,
+  not just one, since deletion and demotion are two different routes to the same dangerous
+  outcome.
+- **A real bug found and fixed while testing this specific safeguard**: the blocking logic
+  itself worked correctly from the first version, but the error shown to whoever triggered it
+  was a generic "Something went wrong" rather than an explanation — Payload sanitizes plain
+  `Error` throws from hooks by default, for good reason (avoiding leaking internal details),
+  but that meant a legitimate, informative message was being silently discarded too. Fixed
+  using Payload's own `APIError` class with `isPublic: true`, and re-verified the exact same
+  blocked action now returns the specific, correct explanation instead.
+- **`scripts/seed-first-admin.ts` updated** to explicitly create its account as `super-admin`
+  rather than relying on the field's default — the account this script creates is the church's
+  own permanent, ultimate account, not one of what may become several regular admins created
+  through the normal UI afterward.
+- **The full set of legitimate, everyday operations re-confirmed working correctly alongside
+  all of the above**, not assumed unaffected by these restrictions: creating a regular admin,
+  a regular admin updating their own email, and deleting a regular (non-super) admin account
+  all still succeed normally — the new rules only affect the specific actions they're meant to.
+
 ## Loading state
 
 `src/app/[locale]/(site)/loading.tsx` uses Next's built-in convention: while any page under
