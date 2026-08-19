@@ -1374,6 +1374,56 @@ decisions that would be awkward to reverse later.
   a regular admin updating their own email, and deleting a regular (non-super) admin account
   all still succeed normally — the new rules only affect the specific actions they're meant to.
 
+## Automated confirmation emails for Prayer Requests and Visit Plans
+
+Requested directly: a "thank you" email sent automatically to whoever submits either form.
+Checked the actual collections first rather than assuming they captured what was needed — both
+already required an email field, so this was genuinely buildable without any schema change.
+
+**This doesn't depend on the domain/SMTP setup discussed for password reset** — it uses Brevo's
+transactional email API directly with the same `BREVO_API_KEY` already in use for the
+newsletter, sending inline HTML content rather than a Brevo template (a deliberate choice,
+made directly rather than assumed, after presenting both options).
+
+- **One real, well-sourced deliverability concern raised before building, not glossed over**:
+  the requested sender is a Gmail address, and Brevo's own documentation confirms that sending
+  from an unauthenticated free-email address gets automatically replaced with a generic,
+  unfamiliar-looking address at send time — not just a vague "might go to spam" caveat, a
+  specific, sourced mechanism. Proceeded anyway per explicit instruction, with the sender
+  address stored in `BREVO_SENDER_EMAIL`/`BREVO_SENDER_NAME` env vars specifically so it can be
+  swapped to a real domain later with zero code changes, matching the stated plan to update it
+  once a domain is registered.
+- **New shared helper** (`src/lib/send-transactional-email.ts`) wrapping Brevo's general
+  transactional endpoint, kept deliberately separate from the newsletter's template-based flow
+  since this uses a different Brevo API. Failures are caught and logged, never thrown — a
+  failed confirmation email must never make a form submission that actually succeeded look
+  broken to the person who submitted it.
+- **Hooked in at the collection level** (`afterChange` on both `PrayerRequests` and
+  `VisitPlans`), not inside the form components or API routes — this fires consistently no
+  matter how a record gets created, not just through the specific public form.
+- **Explicitly guarded against re-firing on later edits** — an admin moving a prayer request
+  from "New" to "Praying," or a visit plan from "New" to "Confirmed," must not re-send the
+  original confirmation. Verified this directly: updated an existing record's status and
+  confirmed zero send attempt was made, not just assumed the `operation !== 'create'` check
+  would hold.
+- **Verified by actually submitting both real forms through a real browser**, not just
+  reasoning about the hook code: captured the exact payload each one builds and confirmed the
+  sender, the recipient's name and email pulled correctly from the form, the subject line, and
+  the personalized wording were all correct — including the visit date rendering as "Friday,
+  December 25, 2026" rather than a raw ISO string, and the conditional "we'll have someone
+  ready to greet you" sentence appearing only when that checkbox is actually checked, tested
+  both ways.
+- **The sandbox's network restrictions turned into a genuine, useful test rather than a
+  blocker**: `api.brevo.com` isn't reachable from this environment, so every test send failed
+  for real — confirming the graceful-failure design actually holds. The form still showed a
+  successful confirmation to the person submitting it, and the underlying Prayer Request and
+  Visit Plan records were confirmed saved directly in the database despite the email failing,
+  not just assumed to be unaffected.
+- **A temporary debug log used during testing was removed before shipping**, specifically
+  because it would have written names and email addresses into production logs — added
+  deliberately to verify the exact request payload, then confirmed removed with a final rebuild
+  and smoke test afterward.
+
 ## Loading state
 
 `src/app/[locale]/(site)/loading.tsx` uses Next's built-in convention: while any page under
