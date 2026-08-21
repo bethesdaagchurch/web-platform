@@ -6,51 +6,22 @@
 // Failures here are swallowed by design, not thrown — a failed
 // confirmation email should never make a form submission that actually
 // succeeded look like it failed to the person filling it out. Errors are
-// still logged server-side so they're visible in Vercel's logs.
+// still logged server-side so they're visible in Vercel's logs. Contrast
+// with the Payload email adapter (brevo-email-adapter.ts), which uses the
+// same underlying call but deliberately lets failures propagate instead.
 
-const BREVO_TRANSACTIONAL_EMAIL_URL = 'https://api.brevo.com/v3/smtp/email'
+import { callBrevoTransactionalAPI } from './brevo-client'
 
-export async function sendTransactionalEmail({
-  to,
-  toName,
-  subject,
-  htmlContent,
-}: {
+export async function sendTransactionalEmail(args: {
   to: string
   toName?: string
   subject: string
   htmlContent: string
 }): Promise<void> {
-  const apiKey = process.env.BREVO_API_KEY
-  const senderEmail = process.env.BREVO_SENDER_EMAIL
-  const senderName = process.env.BREVO_SENDER_NAME || 'Bethesda AG Church'
-
-  if (!apiKey || !senderEmail) {
-    console.error('BREVO_API_KEY or BREVO_SENDER_EMAIL is not set — confirmation email not sent.')
-    return
-  }
-
   try {
-    const res = await fetch(BREVO_TRANSACTIONAL_EMAIL_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        'api-key': apiKey,
-      },
-      body: JSON.stringify({
-        sender: { email: senderEmail, name: senderName },
-        to: [{ email: to, name: toName }],
-        subject,
-        htmlContent,
-      }),
-    })
-
-    if (!res.ok) {
-      const body = await res.text()
-      console.error('Brevo transactional email failed:', res.status, body)
-    }
+    await callBrevoTransactionalAPI(args)
   } catch (err) {
-    console.error('Brevo transactional email request failed:', err)
+    console.error('Confirmation email not sent:', err)
   }
 }
+

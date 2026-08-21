@@ -19,6 +19,7 @@ import { LeadershipInterests } from './collections/LeadershipInterests'
 import { EventRegistrations } from './collections/EventRegistrations'
 import { JoinRequests } from './collections/JoinRequests'
 import { Donations } from './collections/Donations'
+import { brevoEmailAdapter } from './lib/brevo-email-adapter'
 import { Ministries } from './collections/Ministries'
 import { Leadership } from './collections/Leadership'
 import { Sermons } from './collections/Sermons'
@@ -106,6 +107,12 @@ export default buildConfig({
   },
 
   editor: lexicalEditor(),
+
+  // Wraps Brevo's transactional API directly (src/lib/brevo-email-adapter.ts)
+  // rather than SMTP — this is what powers Members' real forgot-password
+  // flow. Using the same Gmail sender as the form-confirmation emails,
+  // acknowledged as temporary pending domain registration — see README.
+  email: brevoEmailAdapter,
 
   secret: process.env.PAYLOAD_SECRET || '',
 

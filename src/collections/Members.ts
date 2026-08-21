@@ -2,7 +2,32 @@ import type { CollectionConfig } from 'payload'
 
 export const Members: CollectionConfig = {
   slug: 'members',
-  auth: true,
+  auth: {
+    // Real forgot-password email now — the church's own template, with a
+    // real reset link, sent via the Brevo email adapter (payload.config.ts,
+    // src/lib/brevo-email-adapter.ts) rather than Payload's generic
+    // default copy. NEXT_PUBLIC_SITE_URL is the site's own stable base
+    // URL — deliberately not derived from the incoming request the way
+    // the newsletter's redirect URL is, since this callback runs inside
+    // Payload's own auth operation, not a Next.js route handler with
+    // direct request access.
+    forgotPassword: {
+      generateEmailSubject: () => 'Reset your Bethesda AG Church password',
+      generateEmailHTML: (args) => {
+        const { token, user } = args ?? {}
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+        const resetUrl = `${baseUrl}/reset-password?token=${token}`
+        const firstName = (user && 'name' in user && typeof user.name === 'string' ? user.name.split(' ')[0] : null) || 'there'
+        return `
+          <p>Hi ${firstName},</p>
+          <p>We received a request to reset your Bethesda AG Church account password. Click the link below to choose a new one — this link expires in 1 hour.</p>
+          <p><a href="${resetUrl}">${resetUrl}</a></p>
+          <p>If you didn't request this, you can safely ignore this email — your password won't be changed.</p>
+          <p>With care,<br>Bethesda AG Church</p>
+        `
+      },
+    },
+  },
   admin: {
     useAsTitle: 'name',
     description: 'Public site member accounts — separate from Users (CMS admin accounts). Members cannot log into /admin.',

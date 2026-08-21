@@ -1424,6 +1424,61 @@ made directly rather than assumed, after presenting both options).
   deliberately to verify the exact request payload, then confirmed removed with a final rebuild
   and smoke test afterward.
 
+## Forgot Password — now genuinely wired, not just a real screen
+
+A direct, well-reasoned challenge to the earlier "isn't possible without a domain" framing:
+since the Prayer Request confirmation emails already prove a Gmail sender works with Brevo
+(with the acknowledged deliverability caveat), why not the same approach here? The honest
+answer, checked rather than assumed: that earlier reasoning was overstated. Verified directly
+against Payload's own `EmailAdapter` type definition — it's a generic interface (just a
+`sendEmail` function), not SMTP-specific, so `@payloadcms/email-nodemailer` is only one possible
+implementation of it, not a requirement.
+
+- **`src/lib/brevo-client.ts`** — the shared, low-level Brevo call, refactored out of the
+  existing `sendTransactionalEmail` so both this and the new password-reset path build on the
+  same tested foundation, with one deliberate difference: this one throws on failure rather
+  than swallowing it.
+- **`src/lib/brevo-email-adapter.ts`** — a custom Payload `EmailAdapter` wrapping that shared
+  client, registered via `payload.config.ts`'s `email:` option. Traced directly through
+  Payload's own `forgotPassword` operation source
+  (`node_modules/payload/dist/auth/operations/forgotPassword.js`) to confirm `sendEmail` is
+  awaited with no inner try/catch — a thrown error here correctly fails the whole operation,
+  which is the right behavior specifically for this email: staying silent (as the Prayer
+  Request emails deliberately do) would leave someone waiting indefinitely for a reset link
+  that never arrives, with no signal anything went wrong.
+- **A second, genuinely separate gap identified and closed, not assumed already handled**:
+  confirmed directly that no page existed anywhere to actually receive a reset link and let
+  someone set a new password. Built `/reset-password` and its form, using Payload's own
+  `resetPassword` operation (`/api/members/reset-password`) — traced its source too, confirming
+  it resets the password *and* establishes a new session in one step, so the form doesn't need
+  a separate "now go sign in" step afterward.
+- **`Members.ts`** now has real, warm `forgotPassword` email content — the church's own tone,
+  with a genuine reset link — rather than Payload's generic default copy.
+- **Verified far beyond "the form submits," through the actual, complete lifecycle**: captured
+  and confirmed the exact email payload Brevo would receive (correct sender, recipient, subject,
+  and a genuinely working reset link with a real token — verified using a temporary debug log,
+  removed before shipping); confirmed that same real token — captured from a request that
+  Brevo's own send had failed on — still worked to actually reset the password, a genuinely
+  interesting confirmation that the token persists independently of the email send outcome;
+  confirmed the new password works for a completely fresh login afterward, in a separate browser
+  session, and that the *old* password is genuinely and permanently rejected; confirmed a
+  missing token, a fake token, and — the security property that matters most here — reusing an
+  *already-consumed* token are all correctly rejected, each tested as its own distinct case
+  rather than assumed equivalent.
+- **One real type error caught during the build**: Payload's callback argument for the custom
+  email content is optional as a whole object, not just its individual properties — destructuring
+  it directly failed the type checker, caught and fixed before this ever reached testing.
+- **A misleading build label, not trusted at face value** — the same class of issue caught once
+  before in this project with the Dashboard page: `/reset-password` was labeled statically
+  prerendered in the build output despite reading a per-request `token` from the URL. Rather
+  than trust the label, tested three genuinely different token states (a real one, a fake one,
+  none at all) across separate requests and confirmed each produced its own correct, distinct
+  result — proving the page reads its token fresh every time regardless of what the build
+  output implied.
+- Uses the same temporary Gmail sender as the Prayer Request/Visit Plan confirmations, with the
+  same acknowledged, heightened deliverability caveat for this specific email type — see that
+  section above for the full reasoning.
+
 ## Loading state
 
 `src/app/[locale]/(site)/loading.tsx` uses Next's built-in convention: while any page under
