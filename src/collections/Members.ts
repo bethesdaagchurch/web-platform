@@ -15,7 +15,7 @@ export const Members: CollectionConfig = {
       generateEmailSubject: () => 'Reset your Bethesda AG Church password',
       generateEmailHTML: (args) => {
         const { token, user } = args ?? {}
-        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+        const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
         const resetUrl = `${baseUrl}/reset-password?token=${token}`
         const firstName = (user && 'name' in user && typeof user.name === 'string' ? user.name.split(' ')[0] : null) || 'there'
         return `
