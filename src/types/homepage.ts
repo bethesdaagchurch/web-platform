@@ -83,6 +83,7 @@ export interface SiteSettings {
   phone: string
   email: string
   mapEmbedUrl: string
+  socialLinks: { facebook: string; instagram: string; youtube: string }
   nav: { key: string; label: string; href: string }[]
   footerLinks: { key: string; heading: string; links: { key: string; label: string; href: string }[] }[]
 }

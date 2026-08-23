@@ -342,7 +342,9 @@
     "guest": "ಅತಿಥಿ",
     "worshipTeam": "ಆರಾಧನಾ ತಂಡ",
     "ledBy": "ಮುನ್ನಡೆಸಿದವರು",
-    "specialItems": "ವಿಶೇಷ ವಸ್ತುಗಳು"
+    "specialItems": "ವಿಶೇಷ ವಸ್ತುಗಳು",
+    "translatedBy": "ಅನುವಾದ",
+    "choir": "ಗಾಯಕ ತಂಡ"
   },
   "groups": {
     "categories": {

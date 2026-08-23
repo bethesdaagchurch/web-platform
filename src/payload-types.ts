@@ -516,6 +516,10 @@ export interface WorshipRota {
   serviceTime: string;
   sermon: {
     speakerName: string;
+    /**
+     * Optional. Select the member translating for this service, if any.
+     */
+    translator?: (number | null) | Member;
     speakerPhoto?: (number | null) | Media;
     /**
      * Shows "(Guest)" next to the name
@@ -528,7 +532,14 @@ export interface WorshipRota {
   };
   worshipTeam: {
     teamName: string;
-    leaderName: string;
+    /**
+     * Select the member leading worship for this entry.
+     */
+    leaderName: number | Member;
+    /**
+     * Optional. Select every member singing on the choir team for this entry.
+     */
+    choirTeam?: (number | Member)[] | null;
     /**
      * Optional small pill, e.g. "Full Ensemble"
      */
@@ -544,7 +555,11 @@ export interface WorshipRota {
       | null;
   };
   /**
-   * Real member accounts serving on this rota entry (leader, team, or anyone else scheduled) — separate from the photo-only team display above. This is what powers "my serving schedule" on a member’s Dashboard; the photo grid is purely visual and doesn’t need to match this list exactly.
+   * For anyone serving in a role with no dedicated field above — a sound tech, a greeter, and so on. Only ever contains exactly who’s added here manually; the worship leader, choir, translator, and special-item people are already tracked automatically and don’t need re-adding.
+   */
+  otherMembersServing?: (number | Member)[] | null;
+  /**
+   * Internal only — automatically derived from every serving-role field above (translator, leader, choir, special items, other members serving) on every save. Powers "My Serving Schedule" on a member’s Dashboard. Not meant for direct editing; add people to the specific role field they actually serve in instead.
    */
   assignedMembers?: (number | Member)[] | null;
   specialItems?:
@@ -553,7 +568,10 @@ export interface WorshipRota {
          * e.g. "Offering Song"
          */
         label: string;
-        personName: string;
+        /**
+         * Select every member serving in this role — more than one is fine, e.g. two vocalists on the same song.
+         */
+        personName: (number | Member)[];
         /**
          * e.g. "Vocalist" — optional
          */
@@ -1048,6 +1066,7 @@ export interface WorshipRotaSelect<T extends boolean = true> {
     | T
     | {
         speakerName?: T;
+        translator?: T;
         speakerPhoto?: T;
         isGuest?: T;
         title?: T;
@@ -1057,6 +1076,7 @@ export interface WorshipRotaSelect<T extends boolean = true> {
     | {
         teamName?: T;
         leaderName?: T;
+        choirTeam?: T;
         badge?: T;
         members?:
           | T
@@ -1065,6 +1085,7 @@ export interface WorshipRotaSelect<T extends boolean = true> {
               id?: T;
             };
       };
+  otherMembersServing?: T;
   assignedMembers?: T;
   specialItems?:
     | T

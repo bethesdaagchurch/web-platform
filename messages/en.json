@@ -342,7 +342,9 @@
     "guest": "Guest",
     "worshipTeam": "Worship Team",
     "ledBy": "Led by",
-    "specialItems": "Special Items"
+    "specialItems": "Special Items",
+    "translatedBy": "Translated by",
+    "choir": "Choir"
   },
   "groups": {
     "categories": {

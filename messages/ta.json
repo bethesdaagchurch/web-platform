@@ -342,7 +342,9 @@
     "guest": "விருந்தினர்",
     "worshipTeam": "வழிபாட்டுக் குழு",
     "ledBy": "வழிநடத்துபவர்",
-    "specialItems": "சிறப்பு உருப்படிகள்"
+    "specialItems": "சிறப்பு உருப்படிகள்",
+    "translatedBy": "மொழிபெயர்ப்பு",
+    "choir": "பாடகர் குழு"
   },
   "groups": {
     "categories": {

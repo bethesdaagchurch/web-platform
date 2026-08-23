@@ -1479,6 +1479,158 @@ implementation of it, not a requirement.
   same acknowledged, heightened deliverability caveat for this specific email type — see that
   section above for the full reasoning.
 
+## Four requested changes: Worship Rota dropdowns, social media links fix, Contact confirmation email
+
+Requested together, confirmed understood correctly before starting, then implemented and
+verified as four genuinely distinct pieces of work — one real bug found along the way, not
+assumed already working.
+
+**Worship Rota — `leaderName` and `personName` converted from free text to real Member
+relationships.** Traced through the adapter and the display component first to confirm the
+blast radius stayed contained — the component only ever wanted a display string, so the fix
+lived entirely in the schema and the adapter, extracting `.name` from the now-populated
+relationship rather than touching the UI layer at all. **A real schema-change consequence
+flagged upfront, not discovered after the fact**: since free-text names can't automatically map
+to a Member record, any existing Worship Rota entries in production lose those two specific
+field values on this migration — they'll need re-selecting from the new dropdown afterward,
+nothing else on those entries is affected.
+
+- Verified in the actual admin panel, not just by reading the schema: logged in, opened a real
+  entry, confirmed both fields show the correct member as a real relationship chip, then
+  specifically clicked the dropdown open and confirmed it genuinely lists other real members as
+  selectable options — catching a test-script mistake along the way (an imprecise selector
+  first opened a "Create New Member" modal by accident, which could have produced a false
+  positive if the resulting page text hadn't been checked carefully).
+- Verified on the public-facing Worship Rota page too, logged in as a real member: both names
+  render correctly ("Led by: Sarah Worship Leader," "David Vocalist (Vocalist)"), with no
+  fallback placeholder or leaked raw ID anywhere on the page.
+
+**Social media links — a real, found bug, not a misconfiguration.** Checked the actual code
+before assuming anything, and found the root cause directly: the Footer's social icons were
+hardcoded `<span>` elements with no `href` at all, and the adapter never even read the
+`socialLinks` field from Payload in the first place. No value entered in `/admin` could ever
+have reached the rendered page — this wasn't about what was entered, it was that nothing on the
+other end was wired to receive it.
+
+- Fixed both pieces: the adapter now exposes real URLs, and the Footer wraps each icon in an
+  actual link, showing only the icons whose URL is actually filled in.
+- Verified with real, seeded data — Facebook and Instagram set, YouTube deliberately left
+  blank — and checked precisely, not just visually: the exact `href` values match what was
+  seeded, `target="_blank"` and `rel="noopener noreferrer"` are present for safe external
+  links, and the YouTube icon is confirmed genuinely absent from the DOM (not just visually
+  hidden) when its URL is empty.
+
+**Contact form confirmation email**, applying the exact same proven hook pattern from Prayer
+Request, Visit Plan, and Forgot Password — fires once on creation, confirmed via the same
+temporary-debug-log-then-remove approach used in every prior email feature, since Brevo is
+unreachable from this sandbox and every test send fails for real, which doubles as a genuine
+test of the graceful-failure path. Confirmed the submission record saves successfully despite
+the email failing, and confirmed a later status change does not re-fire the email.
+
+- **One thing noticed and flagged, deliberately left out of scope**: the confirmation email's
+  wording pulls the subject dropdown's raw stored value ("general") rather than its
+  human-readable label, since the field is stored as plain text at the Payload level, not a
+  proper select with separate label/value pairs. Not a bug in what was built here — the hook
+  correctly uses whatever value the form actually submits — but worth a follow-up if the exact
+  wording matters, rather than silently changing the underlying field's behavior without asking.
+
+## Worship Rota: leaders and special-item people weren't tracking on their own Dashboard
+
+Reported directly, right after the previous round's leaderName/personName dropdown work:
+members assigned as the worship leader or under a Special Item weren't showing up on their own
+"My Serving Schedule" — only members explicitly added to the separate `assignedMembers` field
+were. Root cause confirmed by re-reading both sides directly rather than assumed: the
+Dashboard's serving-schedule query is a direct `{ assignedMembers: { in: [member.id] } }`
+lookup, and `assignedMembers` has always been a completely separate field from `leaderName` and
+`specialItems.personName` — even before last round's change from free text to real
+relationships. Selecting someone as the worship leader never had any connection to that same
+person's `assignedMembers` entry; nothing was newly broken, but the previous round's change from
+free text to real Member references made the gap far more likely to actually matter in practice
+than it ever had before.
+
+- **Fixed at the root, not documented as a workaround.** Rather than just tell the admin to
+  remember to separately add the same person to `assignedMembers` too — an easy thing to
+  forget, and exactly what caused this report — added a `beforeChange` hook on `WorshipRota`
+  that automatically folds the current `leaderName` and every `specialItems` `personName` into
+  `assignedMembers` on every save, deduplicated against whatever's already there. The double
+  entry is now structurally impossible to forget, not just less likely.
+- **A deliberate, worth-stating-clearly design choice**: the hook only ever *adds*, never
+  removes. Confirmed directly — changing an entry's leader from one member to another leaves
+  the previous leader on `assignedMembers` rather than silently dropping them, since the hook
+  has no way to know whether that person is still serving in some other, unlisted capacity.
+  Solves exactly the reported problem (people missing who should be there) without introducing
+  a new, more surprising failure mode (people silently disappearing). If someone genuinely needs
+  removing from `assignedMembers` entirely, that's still a direct, manual edit to that field
+  itself — this hook only guarantees the minimum, not an exclusive source of truth.
+- **Verified against the exact reported scenario, not a simplified stand-in**: created a rota
+  entry with a real leader and a real special-item person, deliberately leaving
+  `assignedMembers` completely unset, and confirmed directly in the database that both were
+  automatically included — then confirmed both actually see the entry on their own real
+  Dashboard, with the special-item person specifically checked since that's the exact case
+  originally reported broken.
+- **Two further, more surgical tests, not assumed from the main case alone**: confirmed a third
+  member — referenced nowhere in this entry at all — correctly does *not* see it on their
+  Dashboard, ruling out accidental over-inclusion; and confirmed updating an existing entry's
+  leader later correctly re-runs the sync and adds the new leader, not just a fresh `create`.
+- A real TypeScript error surfaced and fixed during the build, caught by the compiler rather
+  than at runtime: `data`'s nested array fields aren't fully inferred inside a `beforeChange`
+  hook's loosely-typed `data` parameter, requiring explicit type annotations through the
+  `map`/`filter` chain rather than relying on inference.
+
+## Worship Rota: Translator, Choir Team, multi-select Special Items, and rethinking assignedMembers
+
+Feedback given directly, right after the previous round's serving-schedule fix: the rota needed
+finer-grained roles, and — a genuinely good question raised alongside the specific asks —
+whether `assignedMembers` still made sense at all once every real role had its own field.
+
+**Four schema changes**, each a real relationship to Members, not free text:
+
+- **Translator** — new, optional single-select field under Sermon, right after Speaker Name.
+- **Choir Team** — new, optional multi-select field under Worship Team, right after Leader Name.
+- **Special Items' Person Name** — converted from single-select to multi-select, so more than
+  one person (two vocalists on the same offering song, for instance) can be credited for the
+  same item.
+
+**On `assignedMembers` — answered directly, not just acted on.** Explained clearly what it
+actually does (the sole thing the Dashboard's serving-schedule query checks) before touching
+anything, then proposed a specific redesign rather than just picking removing-it or keeping-it
+unilaterally: once Translator, Choir Team, and multi-select Special Items covered nearly every
+realistic serving role, having admins also separately, manually maintain `assignedMembers` was
+redundant — and, by direct account, actively confusing. Asked one clarifying question before
+building anything, since the two paths genuinely diverge: hide the field entirely, or keep a way
+to manually add someone in a role with no dedicated field (a sound tech, a greeter). Given the
+latter answer, kept `assignedMembers` as the Dashboard's underlying index — fast, single-field
+query, unchanged — but made it fully internal (`admin.hidden: true`, in `WorshipRota.ts`) and
+added a new, genuinely separate `otherMembersServing` field that only ever contains exactly who
+an admin explicitly adds there. Deliberately did *not* reuse one field for both purposes — an
+admin seeing Translator, Leader, and Choir names appear in a field meant for manual "other"
+entries would just recreate the original confusion in a new shape.
+
+- **The auto-sync hook (built last round for leaderName/personName) extended to cover every new
+  source**: Translator, Choir Team, every Special Item person (now plural), and
+  `otherMembersServing` are all automatically folded into the hidden `assignedMembers` on every
+  save, deduplicated. Nothing new to remember, same principle as the original fix.
+- **Verified with a genuinely comprehensive seed, not a simplified stand-in**: created one entry
+  referencing seven different members across every source field, deliberately leaving
+  `assignedMembers` completely unset, and confirmed directly in the database that exactly those
+  seven — and no others — were present with zero duplicates.
+- **Checked five real member Dashboards individually, not just the aggregate result**: the
+  translator, a choir member, one of the two special-item vocalists, the manually-added "other"
+  server, and one entirely unrelated member, confirming each did or didn't see the entry exactly
+  as expected — covering every new/changed source field plus the negative case in one pass.
+- **Confirmed directly in the real admin panel**, not just from reading the schema, that
+  `assignedMembers` is genuinely absent from the edit form and `otherMembersServing` is there in
+  its place, and confirmed the public Rota page renders "Translated by," "Choir," and both
+  vocalist names on the same special item, matching the existing card's visual style with no
+  new component logic needed beyond two added lines.
+- **A real, honestly-flagged data-loss risk for existing production data**, reasoned through
+  rather than assumed away: converting `personName` from single- to multi-select changes its
+  underlying storage structure, the same category of change that lost data on this exact field
+  two rounds ago when it first became a relationship. This couldn't be directly tested against
+  a populated database in this sandbox (every migration here ran against a fresh one) — flagged
+  as a likely, not just possible, risk on that basis, consistent with the earlier, confirmed
+  case, rather than presented as safe without genuine evidence either way.
+
 ## Loading state
 
 `src/app/[locale]/(site)/loading.tsx` uses Next's built-in convention: while any page under
