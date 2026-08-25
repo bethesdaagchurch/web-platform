@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { sendTransactionalEmail } from '@/lib/send-transactional-email'
 
 export const PrayerRequests: CollectionConfig = {
   slug: 'prayer-requests',
@@ -12,6 +13,26 @@ export const PrayerRequests: CollectionConfig = {
     read: ({ req }) => req.user?.collection === 'users',
     update: ({ req }) => req.user?.collection === 'users',
     delete: ({ req }) => req.user?.collection === 'users',
+  },
+  hooks: {
+    afterChange: [
+      async ({ doc, operation }) => {
+        // Only on the original submission — an admin later changing
+        // status (New → Praying → Resolved) shouldn't re-send this.
+        if (operation !== 'create') return
+        await sendTransactionalEmail({
+          to: doc.email,
+          toName: doc.firstName,
+          subject: 'We received your prayer request',
+          htmlContent: `
+            <p>Dear ${doc.firstName},</p>
+            <p>Thank you for sharing your prayer request with us. It means a lot that you trusted us with it, and we want you to know it's already in the hands of people who care and are praying for you.</p>
+            <p>You're not carrying this alone.</p>
+            <p>With care,<br>Bethesda AG Church</p>
+          `,
+        })
+      },
+    ],
   },
   fields: [
     { name: 'firstName', type: 'text', required: true },

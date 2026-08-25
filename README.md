@@ -1102,6 +1102,535 @@ visible); implemented as asked, not overridden.
   visit yet" didn't satisfy Payload's `Where` query type — fixed by building the query
   conditionally instead of always including a possibly-empty clause.
 
+## Group member roster moved to the Groups listing cards themselves
+
+Clarified directly: the member roster belongs on each Group's own card on the `/groups`
+listing page, positioned specifically between "Led by" and the Join/Already-a-Member button —
+not on the separate detail page built two rounds ago, which stays as-is for browsing a
+group's full info.
+
+- Added `members` to `GroupListing` (the type each card renders from) and the groups adapter,
+  reading directly from `Groups.members` — the same real, admin-editable field already
+  confirmed working last round, no new backend piece needed here.
+- **The privacy gating is computed per-card, not per-page** — a member could be shown several
+  groups at once on this same listing, and should only see the roster for the ones they're
+  actually part of. Verified this specifically, not just the single-group case: seeded two
+  separate groups with different members, logged in as someone in only one of them, and
+  confirmed their fellow group member's name appears on that group's card while the *other*
+  group's card — visible on the same page, at the same time — shows no roster at all, going
+  straight from "Led by" to "Join Group" exactly as it would for someone who'd never
+  logged in. Also confirmed a fully logged-out visitor sees no roster on either card.
+
+## Critical fix: mobile navigation was completely inaccessible
+
+Reported directly from checking the live site on a real phone: the entire header menu was
+hidden, no way to navigate anywhere. Confirmed the cause immediately in the code — `<nav
+className="hidden items-center gap-8 md:flex">` hides the nav completely below the `md`
+breakpoint (768px, effectively every phone), with no mobile alternative ever built. Worth
+being honest about rather than glossing over: this slipped through this project's entire
+history of testing because every Playwright check throughout has used desktop-sized viewports
+— nothing was ever actually checked at a phone-sized width until this was reported.
+
+- Added a standard hamburger menu, visible only below `md`, opening a full-width panel with
+  every nav link, Login or the member's name, Dashboard, Log out, the language switcher, and
+  Give — everything the desktop header offers, not just the page links.
+- **A second, related bug found and fixed while testing this, not assumed to just work**:
+  reusing the existing `MemberMenu` dropdown inside the new mobile panel technically worked,
+  but its member-name text had `hidden ... sm:inline` baked in from when it was only ever
+  shown in the compact desktop header — on a real phone-width screen, a logged-in member's
+  name silently didn't appear at all inside their own mobile menu. Beyond that, reusing a
+  dropdown-that-requires-a-tap-to-open inside a panel that's already the "opened" state would
+  have meant two taps to reach Dashboard or Log out. Rebuilt this section to show the name,
+  Dashboard, and Log out directly and stacked instead, matching the rest of the mobile panel,
+  with its own logout handler rather than nesting the desktop dropdown component inside it.
+- Verified thoroughly at an actual mobile viewport width (375\u00d7812), not just that the code
+  compiled: confirmed the hamburger appears and the nav is genuinely reachable, confirmed
+  clicking a link actually navigates and the menu auto-closes afterward, confirmed a
+  logged-in member's real name now appears correctly with working Dashboard and Log out
+  (tested by actually logging out and confirming the session really ended, not just that the
+  button existed), and separately confirmed desktop is completely unaffected \u2014 the hamburger
+  stays hidden there and the original horizontal nav still shows directly with no interaction
+  needed. Also confirmed the mobile menu labels render correctly in Tamil.
+
+## Full mobile compatibility audit across the site
+
+Requested after the header fix, with an explicit constraint: fix mobile without touching the
+desktop experience at all. Approached in two passes — a static code search for the exact bug
+pattern that caused the header issue (content hidden below a breakpoint with no alternative
+shown), then systematic visual testing at a real 375px mobile viewport across every major page,
+since layout and spacing problems don't show up in a code search the way visibility bugs do.
+
+**The static search found no other instances of the header's specific bug** — two files matched
+the search pattern, and both turned out to be non-issues on inspection: one was a false-positive
+regex match on "overflow-hidden" (an unrelated CSS utility that happens to contain the substring
+"hidden"), and the other was a deliberately documented, genuinely safe choice — a decorative
+timeline connector line hidden on mobile, with none of the actual milestone content affected.
+
+**Three real, distinct bugs found through the visual pass and fixed**, all verified on both
+mobile and desktop afterward, not just re-read in code:
+
+- **Dashboard cards had no minimum spacing between title and link** — "My Registered
+  EventsBrowse Events" was visibly running together, since `justify-between` alone provides no
+  spacing floor once combined text length eats up the available width. Fixed consistently
+  across all five dashboard cards sharing this exact header pattern (Events, Groups, Ministries,
+  Rota, Volunteer Shift) with `flex-wrap` plus an explicit gap, not just the one card that
+  happened to visibly break — the others could fail the same way under longer Tamil or Kannada
+  translations even though English text fit today.
+- **The Groups listing page showed its filter sidebar above the page's own hero and title on
+  mobile** — a visitor would see filter buttons before knowing what page they were even on.
+  Root cause: a two-column desktop grid collapsing to a single column naturally stacks in DOM
+  order unless explicitly told otherwise. Fixed with the standard CSS `order` utility pattern —
+  sidebar shows after the main content on mobile, stays visually first (left) on desktop
+  exactly as before.
+- **The Worship Rota page (`/ministries/rota`) had this identical sidebar-ordering bug** — found
+  by systematically checking every component sharing the same fixed-width-sidebar grid pattern
+  rather than assuming the issue was unique to Groups. Fixed the same way.
+- **A fourth, smaller spacing bug** on the group detail page: "Back to Groups" and the category
+  badge were crowding onto the same line with no space between them, since both were inline-level
+  elements and a margin-bottom alone doesn't force a line break between inline siblings. Checked
+  whether the Events detail page had the same issue (it uses an identical-looking pattern) and
+  confirmed it didn't — Events wraps its back-link in its own block-level container, which
+  already forces the break; Groups' link and badge were direct siblings with no such wrapper.
+  Fixed by changing the link from `inline-flex` to a `flex w-fit` block-level element instead.
+
+**Every fix was screenshotted on both a real mobile viewport and desktop afterward**, specifically
+to catch any accidental impact on the desktop experience given that was an explicit requirement
+going in — every desktop screenshot came back visually identical to before each fix.
+
+## Critical security fix: any logged-in Member could grant themselves full admin access
+
+Found while answering a direct question about how admin access actually works — asked, then
+verified rather than just explained from memory, since the stakes of being wrong either
+direction (falsely reassuring or falsely alarming) were too high to guess at.
+
+**The `Users` (admin) collection had no explicit `access` block at all.** Payload's own default
+access rule for a collection with none specified is `Boolean(req.user)` — true for *any*
+authenticated session, regardless of which collection it belongs to. Since `Members` also has
+`auth: true`, a regular church member logging in through the public `/create-account` flow — with
+zero admin intent — satisfied that same check. Confirmed this for real, not just reasoned about
+it: created a genuine test Member account, logged in as that member (no admin privileges granted
+anywhere), and sent one direct `fetch` request to `/api/users` from the browser console. It
+returned `201 Created` with a brand-new, fully-privileged admin account using credentials of the
+attacker's own choosing. No admin panel access, no special tooling — just a logged-in member and
+one API call.
+
+- **Fixed by adding explicit access control** requiring `req.user?.collection === 'users'` for
+  `create`, `read`, `update`, and `delete` — matching the same pattern already used throughout
+  this project for sensitive collections like `Donations`. This collection had been treated as
+  "foundational plumbing" from very early on and never gotten the same access-control review as
+  more feature-oriented collections since.
+- **Re-ran the identical attack after the fix and confirmed it now correctly fails** — the exact
+  same request now returns `403 Forbidden`, "You are not allowed to perform this action."
+- **Three separate legitimate-use checks, specifically to confirm nothing else broke while fixing
+  this**: confirmed an existing, genuine admin can still log in and view the Users collection
+  normally; confirmed Payload's own built-in "create first user" bootstrap screen — the intended,
+  one-time way to create the very first admin account on a brand-new deployment — still appears
+  correctly for a genuinely empty `Users` collection and completes successfully end to end;
+  and confirmed that bootstrap door correctly stays permanently shut on a second visit once an
+  admin account exists, exactly as it did before this change. This bootstrap mechanism uses a
+  separate code path from the normal `create` access rule (verified directly in Payload's own
+  source), so it was never at risk from either the original vulnerability or this fix.
+
+For anyone reading this who deployed before this fix landed: it's worth checking your production
+Users collection for any account you don't recognize.
+
+## First-admin race condition — a real follow-up concern, closed with a script
+
+A sharp, well-reasoned follow-up to the access-control fix above: Payload's public "create
+first admin" screen is only safe for the brief window between a fresh deploy going live and
+someone actually claiming it. If anyone else — a bot scanning for exposed `/admin` panels, for
+instance — finds that URL first, they claim the admin account instead, and since that bootstrap
+door locks permanently the instant it's used, the real owner would be genuinely locked out with
+no way back in through that path. This is a real, documented class of vulnerability, not
+something to dismiss as unlikely.
+
+**The fix isn't a code change — it's eliminating the window entirely.** Added
+`scripts/seed-first-admin.ts`, a one-time utility that creates the admin account directly via
+Payload's Local API, meant to be run immediately after migrations, before the site is ever
+shared with anyone. By the time a stranger could possibly find the URL, there's nothing left
+for them to claim — the bootstrap door is already closed.
+
+- **A real mistake caught and corrected immediately, not left standing**: initially suggested a
+  `payload create-first-user` CLI command without verifying it actually existed. Checked
+  Payload's real CLI command list directly afterward and confirmed no such command exists —
+  corrected this immediately with the actual, verified approach (the Local API script) rather
+  than let an unverified command stand as guidance for a security-sensitive operation.
+- **The script includes its own safety guard**: refuses to run at all if the Users collection
+  already has any record, so it can't accidentally be pointed at a database that already has a
+  real admin and create a redundant or conflicting account.
+- **Verified end to end against a genuinely fresh, empty test database**: ran the script once
+  and confirmed it created a real, working admin account; ran it again immediately afterward
+  and confirmed the safety guard correctly refused, with a clear message explaining why; then
+  logged in through the actual admin panel using the seeded account's credentials and confirmed
+  it works exactly like any normally-created admin — not just that the database record existed,
+  but that real authentication succeeds with it.
+- **This is a reusable tool for this project going forward**, not a one-off fix — the same race
+  condition would apply again for any future fresh database (a new staging environment, or
+  production ever being rebuilt from scratch), and this script is meant to be the standard way
+  to handle that moment from now on rather than relying on the public bootstrap screen.
+
+## Closing the race condition for real: the public bootstrap path is now blocked entirely
+
+A sharp, correct follow-up to the section above: the seed script only helps you *win* the race
+against the public bootstrap screen — it doesn't remove the screen itself. Asked directly
+whether it had been removed, and the honest answer was no. Fixed properly this round, in
+`src/middleware.ts`, with two real bugs found and fixed along the way through direct testing
+rather than assumption.
+
+- **First attempt caused a genuine infinite redirect loop.** Redirecting the blocked page to
+  another `/admin/*` path (specifically `/admin/login`) resulted in a blank, non-functional
+  page. Investigated with real navigation tracking rather than guessing — confirmed over 60
+  rapid navigations to the same URL in seconds. Payload's own client-side admin code sees the
+  Users collection is still empty and keeps trying to route back to the bootstrap screen,
+  fighting the redirect forever. Fixed by redirecting to the homepage instead, entirely outside
+  Payload's own admin route tree, which sidesteps that fight completely — confirmed with the
+  same navigation tracking that it now resolves in exactly two clean navigations.
+- **Blocking the page alone was confirmed insufficient — not assumed to be enough.** Directly
+  tested whether the underlying API endpoint the page itself calls
+  (`/api/users/first-register`) could still be reached with a raw request, bypassing the UI
+  entirely. It could — the exact same attack from two rounds ago succeeded again, just through
+  a different door. Fixed by blocking that specific API path in the same middleware, returning
+  a plain 404 rather than any response that would hint at what it's protecting.
+- **Every legitimate path re-verified afterward, together, on a genuinely fresh empty
+  database**: confirmed the bootstrap page redirects cleanly with no loop, confirmed the API
+  endpoint correctly returns 404, confirmed `scripts/seed-first-admin.ts` still successfully
+  creates a real admin account, and confirmed that seeded account still logs in normally through
+  the real admin panel — the full, correct sequence working end to end with both blocks in
+  place, not just each piece checked in isolation.
+
+With this in place, the only way to create the first admin account on a fresh database is now
+`scripts/seed-first-admin.ts` — there is no public path left to race against.
+
+## One more edge case checked directly: bare /admin, not just the bootstrap sub-path
+
+Asked directly to confirm this understanding rather than assumed correct: does the block also
+cover someone simply visiting `/admin` itself, not the specific `/admin/create-first-user`
+URL? Worth checking specifically, since the middleware's matcher excludes all of `/admin` by
+default, with only that one sub-path carved out as an exception.
+
+- **Confirmed correct, but only after catching a real bug along the way**: the first test of
+  this showed a genuine server-side crash ("Application error") rather than a clean result.
+  Investigated the actual server log rather than accepting the crash as some kind of
+  coincidence — the real cause was unrelated to this fix, a sandbox database that had lost its
+  tables between test rounds. Restored it properly and re-tested rather than reporting the
+  crash as if it reflected the real, shipped behavior.
+- **With the database properly in its intended state**, visiting bare `/admin` on a fresh,
+  empty database correctly redirects all the way to the homepage — Payload's own internal
+  logic for that root path depends on the same resources already blocked, so the protection
+  extends there without any additional code needed.
+- **Confirmed the full, correct sequence together, not each piece in isolation**: bare `/admin`
+  redirects safely before any admin exists; running `scripts/seed-first-admin.ts` still
+  succeeds; and after that, `/admin` correctly shows Payload's genuine login screen — confirmed
+  visually, not just by checking the URL — with that seeded account logging in successfully.
+
+## Two-tier admin roles: super admin and admin
+
+Proposed directly, with a clear governance model already sketched out: a super admin created
+only by the seed script, regular admins created by that super admin, and a super admin
+protected from being edited or deleted by anyone else. Discussed three real open questions
+before building (can regular admins manage each other, can a super admin promote someone else,
+should a super admin be blocked from deleting themselves) rather than assuming answers to
+decisions that would be awkward to reverse later.
+
+- **Only a super admin can create new admin accounts** through the normal UI/API — a regular
+  admin attempting this gets a clean 403, verified directly with a real API call, not assumed
+  from reading the access rule.
+- **A regular admin can only update their own record** — enforced as a database-level query
+  constraint, not just a UI restriction, so it holds even against a direct API call bypassing
+  the admin panel entirely. Verified a regular admin genuinely cannot update the super admin's
+  record, and genuinely can update their own.
+- **Field-level protection against self-promotion, verified against the actual database, not
+  just the API response**: a regular admin can update other fields on their own record (their
+  email, for instance) but their `role` field specifically is protected — Payload's real
+  behavior here is to silently drop the unauthorized field from the update rather than reject
+  the whole request, so the self-promotion attempt actually returns a `200` with the *rest* of
+  the update applied. Caught this nuance by checking the stored role directly in the database
+  afterward rather than trusting the API's response body, which could have looked like success.
+- **Only a super admin can delete any admin account**, and a regular admin can't delete anyone,
+  including themselves.
+- **A super admin can promote a regular admin to super admin** — confirmed this works, and
+  confirmed the resulting account genuinely has elevated permissions afterward, not just the
+  label.
+- **The "never lose the last super admin" safeguard**, built as two hooks (`beforeDelete` and
+  `beforeChange`) rather than a simpler blanket rule, specifically because the real risk is
+  reaching zero super admins, not any single action in isolation — with two super admins,
+  demoting one back to a regular admin correctly succeeds; with only one remaining, both
+  deleting *and* demoting that account are correctly blocked. Tested both paths specifically,
+  not just one, since deletion and demotion are two different routes to the same dangerous
+  outcome.
+- **A real bug found and fixed while testing this specific safeguard**: the blocking logic
+  itself worked correctly from the first version, but the error shown to whoever triggered it
+  was a generic "Something went wrong" rather than an explanation — Payload sanitizes plain
+  `Error` throws from hooks by default, for good reason (avoiding leaking internal details),
+  but that meant a legitimate, informative message was being silently discarded too. Fixed
+  using Payload's own `APIError` class with `isPublic: true`, and re-verified the exact same
+  blocked action now returns the specific, correct explanation instead.
+- **`scripts/seed-first-admin.ts` updated** to explicitly create its account as `super-admin`
+  rather than relying on the field's default — the account this script creates is the church's
+  own permanent, ultimate account, not one of what may become several regular admins created
+  through the normal UI afterward.
+- **The full set of legitimate, everyday operations re-confirmed working correctly alongside
+  all of the above**, not assumed unaffected by these restrictions: creating a regular admin,
+  a regular admin updating their own email, and deleting a regular (non-super) admin account
+  all still succeed normally — the new rules only affect the specific actions they're meant to.
+
+## Automated confirmation emails for Prayer Requests and Visit Plans
+
+Requested directly: a "thank you" email sent automatically to whoever submits either form.
+Checked the actual collections first rather than assuming they captured what was needed — both
+already required an email field, so this was genuinely buildable without any schema change.
+
+**This doesn't depend on the domain/SMTP setup discussed for password reset** — it uses Brevo's
+transactional email API directly with the same `BREVO_API_KEY` already in use for the
+newsletter, sending inline HTML content rather than a Brevo template (a deliberate choice,
+made directly rather than assumed, after presenting both options).
+
+- **One real, well-sourced deliverability concern raised before building, not glossed over**:
+  the requested sender is a Gmail address, and Brevo's own documentation confirms that sending
+  from an unauthenticated free-email address gets automatically replaced with a generic,
+  unfamiliar-looking address at send time — not just a vague "might go to spam" caveat, a
+  specific, sourced mechanism. Proceeded anyway per explicit instruction, with the sender
+  address stored in `BREVO_SENDER_EMAIL`/`BREVO_SENDER_NAME` env vars specifically so it can be
+  swapped to a real domain later with zero code changes, matching the stated plan to update it
+  once a domain is registered.
+- **New shared helper** (`src/lib/send-transactional-email.ts`) wrapping Brevo's general
+  transactional endpoint, kept deliberately separate from the newsletter's template-based flow
+  since this uses a different Brevo API. Failures are caught and logged, never thrown — a
+  failed confirmation email must never make a form submission that actually succeeded look
+  broken to the person who submitted it.
+- **Hooked in at the collection level** (`afterChange` on both `PrayerRequests` and
+  `VisitPlans`), not inside the form components or API routes — this fires consistently no
+  matter how a record gets created, not just through the specific public form.
+- **Explicitly guarded against re-firing on later edits** — an admin moving a prayer request
+  from "New" to "Praying," or a visit plan from "New" to "Confirmed," must not re-send the
+  original confirmation. Verified this directly: updated an existing record's status and
+  confirmed zero send attempt was made, not just assumed the `operation !== 'create'` check
+  would hold.
+- **Verified by actually submitting both real forms through a real browser**, not just
+  reasoning about the hook code: captured the exact payload each one builds and confirmed the
+  sender, the recipient's name and email pulled correctly from the form, the subject line, and
+  the personalized wording were all correct — including the visit date rendering as "Friday,
+  December 25, 2026" rather than a raw ISO string, and the conditional "we'll have someone
+  ready to greet you" sentence appearing only when that checkbox is actually checked, tested
+  both ways.
+- **The sandbox's network restrictions turned into a genuine, useful test rather than a
+  blocker**: `api.brevo.com` isn't reachable from this environment, so every test send failed
+  for real — confirming the graceful-failure design actually holds. The form still showed a
+  successful confirmation to the person submitting it, and the underlying Prayer Request and
+  Visit Plan records were confirmed saved directly in the database despite the email failing,
+  not just assumed to be unaffected.
+- **A temporary debug log used during testing was removed before shipping**, specifically
+  because it would have written names and email addresses into production logs — added
+  deliberately to verify the exact request payload, then confirmed removed with a final rebuild
+  and smoke test afterward.
+
+## Forgot Password — now genuinely wired, not just a real screen
+
+A direct, well-reasoned challenge to the earlier "isn't possible without a domain" framing:
+since the Prayer Request confirmation emails already prove a Gmail sender works with Brevo
+(with the acknowledged deliverability caveat), why not the same approach here? The honest
+answer, checked rather than assumed: that earlier reasoning was overstated. Verified directly
+against Payload's own `EmailAdapter` type definition — it's a generic interface (just a
+`sendEmail` function), not SMTP-specific, so `@payloadcms/email-nodemailer` is only one possible
+implementation of it, not a requirement.
+
+- **`src/lib/brevo-client.ts`** — the shared, low-level Brevo call, refactored out of the
+  existing `sendTransactionalEmail` so both this and the new password-reset path build on the
+  same tested foundation, with one deliberate difference: this one throws on failure rather
+  than swallowing it.
+- **`src/lib/brevo-email-adapter.ts`** — a custom Payload `EmailAdapter` wrapping that shared
+  client, registered via `payload.config.ts`'s `email:` option. Traced directly through
+  Payload's own `forgotPassword` operation source
+  (`node_modules/payload/dist/auth/operations/forgotPassword.js`) to confirm `sendEmail` is
+  awaited with no inner try/catch — a thrown error here correctly fails the whole operation,
+  which is the right behavior specifically for this email: staying silent (as the Prayer
+  Request emails deliberately do) would leave someone waiting indefinitely for a reset link
+  that never arrives, with no signal anything went wrong.
+- **A second, genuinely separate gap identified and closed, not assumed already handled**:
+  confirmed directly that no page existed anywhere to actually receive a reset link and let
+  someone set a new password. Built `/reset-password` and its form, using Payload's own
+  `resetPassword` operation (`/api/members/reset-password`) — traced its source too, confirming
+  it resets the password *and* establishes a new session in one step, so the form doesn't need
+  a separate "now go sign in" step afterward.
+- **`Members.ts`** now has real, warm `forgotPassword` email content — the church's own tone,
+  with a genuine reset link — rather than Payload's generic default copy.
+- **Verified far beyond "the form submits," through the actual, complete lifecycle**: captured
+  and confirmed the exact email payload Brevo would receive (correct sender, recipient, subject,
+  and a genuinely working reset link with a real token — verified using a temporary debug log,
+  removed before shipping); confirmed that same real token — captured from a request that
+  Brevo's own send had failed on — still worked to actually reset the password, a genuinely
+  interesting confirmation that the token persists independently of the email send outcome;
+  confirmed the new password works for a completely fresh login afterward, in a separate browser
+  session, and that the *old* password is genuinely and permanently rejected; confirmed a
+  missing token, a fake token, and — the security property that matters most here — reusing an
+  *already-consumed* token are all correctly rejected, each tested as its own distinct case
+  rather than assumed equivalent.
+- **One real type error caught during the build**: Payload's callback argument for the custom
+  email content is optional as a whole object, not just its individual properties — destructuring
+  it directly failed the type checker, caught and fixed before this ever reached testing.
+- **A misleading build label, not trusted at face value** — the same class of issue caught once
+  before in this project with the Dashboard page: `/reset-password` was labeled statically
+  prerendered in the build output despite reading a per-request `token` from the URL. Rather
+  than trust the label, tested three genuinely different token states (a real one, a fake one,
+  none at all) across separate requests and confirmed each produced its own correct, distinct
+  result — proving the page reads its token fresh every time regardless of what the build
+  output implied.
+- Uses the same temporary Gmail sender as the Prayer Request/Visit Plan confirmations, with the
+  same acknowledged, heightened deliverability caveat for this specific email type — see that
+  section above for the full reasoning.
+
+## Four requested changes: Worship Rota dropdowns, social media links fix, Contact confirmation email
+
+Requested together, confirmed understood correctly before starting, then implemented and
+verified as four genuinely distinct pieces of work — one real bug found along the way, not
+assumed already working.
+
+**Worship Rota — `leaderName` and `personName` converted from free text to real Member
+relationships.** Traced through the adapter and the display component first to confirm the
+blast radius stayed contained — the component only ever wanted a display string, so the fix
+lived entirely in the schema and the adapter, extracting `.name` from the now-populated
+relationship rather than touching the UI layer at all. **A real schema-change consequence
+flagged upfront, not discovered after the fact**: since free-text names can't automatically map
+to a Member record, any existing Worship Rota entries in production lose those two specific
+field values on this migration — they'll need re-selecting from the new dropdown afterward,
+nothing else on those entries is affected.
+
+- Verified in the actual admin panel, not just by reading the schema: logged in, opened a real
+  entry, confirmed both fields show the correct member as a real relationship chip, then
+  specifically clicked the dropdown open and confirmed it genuinely lists other real members as
+  selectable options — catching a test-script mistake along the way (an imprecise selector
+  first opened a "Create New Member" modal by accident, which could have produced a false
+  positive if the resulting page text hadn't been checked carefully).
+- Verified on the public-facing Worship Rota page too, logged in as a real member: both names
+  render correctly ("Led by: Sarah Worship Leader," "David Vocalist (Vocalist)"), with no
+  fallback placeholder or leaked raw ID anywhere on the page.
+
+**Social media links — a real, found bug, not a misconfiguration.** Checked the actual code
+before assuming anything, and found the root cause directly: the Footer's social icons were
+hardcoded `<span>` elements with no `href` at all, and the adapter never even read the
+`socialLinks` field from Payload in the first place. No value entered in `/admin` could ever
+have reached the rendered page — this wasn't about what was entered, it was that nothing on the
+other end was wired to receive it.
+
+- Fixed both pieces: the adapter now exposes real URLs, and the Footer wraps each icon in an
+  actual link, showing only the icons whose URL is actually filled in.
+- Verified with real, seeded data — Facebook and Instagram set, YouTube deliberately left
+  blank — and checked precisely, not just visually: the exact `href` values match what was
+  seeded, `target="_blank"` and `rel="noopener noreferrer"` are present for safe external
+  links, and the YouTube icon is confirmed genuinely absent from the DOM (not just visually
+  hidden) when its URL is empty.
+
+**Contact form confirmation email**, applying the exact same proven hook pattern from Prayer
+Request, Visit Plan, and Forgot Password — fires once on creation, confirmed via the same
+temporary-debug-log-then-remove approach used in every prior email feature, since Brevo is
+unreachable from this sandbox and every test send fails for real, which doubles as a genuine
+test of the graceful-failure path. Confirmed the submission record saves successfully despite
+the email failing, and confirmed a later status change does not re-fire the email.
+
+- **One thing noticed and flagged, deliberately left out of scope**: the confirmation email's
+  wording pulls the subject dropdown's raw stored value ("general") rather than its
+  human-readable label, since the field is stored as plain text at the Payload level, not a
+  proper select with separate label/value pairs. Not a bug in what was built here — the hook
+  correctly uses whatever value the form actually submits — but worth a follow-up if the exact
+  wording matters, rather than silently changing the underlying field's behavior without asking.
+
+## Worship Rota: leaders and special-item people weren't tracking on their own Dashboard
+
+Reported directly, right after the previous round's leaderName/personName dropdown work:
+members assigned as the worship leader or under a Special Item weren't showing up on their own
+"My Serving Schedule" — only members explicitly added to the separate `assignedMembers` field
+were. Root cause confirmed by re-reading both sides directly rather than assumed: the
+Dashboard's serving-schedule query is a direct `{ assignedMembers: { in: [member.id] } }`
+lookup, and `assignedMembers` has always been a completely separate field from `leaderName` and
+`specialItems.personName` — even before last round's change from free text to real
+relationships. Selecting someone as the worship leader never had any connection to that same
+person's `assignedMembers` entry; nothing was newly broken, but the previous round's change from
+free text to real Member references made the gap far more likely to actually matter in practice
+than it ever had before.
+
+- **Fixed at the root, not documented as a workaround.** Rather than just tell the admin to
+  remember to separately add the same person to `assignedMembers` too — an easy thing to
+  forget, and exactly what caused this report — added a `beforeChange` hook on `WorshipRota`
+  that automatically folds the current `leaderName` and every `specialItems` `personName` into
+  `assignedMembers` on every save, deduplicated against whatever's already there. The double
+  entry is now structurally impossible to forget, not just less likely.
+- **A deliberate, worth-stating-clearly design choice**: the hook only ever *adds*, never
+  removes. Confirmed directly — changing an entry's leader from one member to another leaves
+  the previous leader on `assignedMembers` rather than silently dropping them, since the hook
+  has no way to know whether that person is still serving in some other, unlisted capacity.
+  Solves exactly the reported problem (people missing who should be there) without introducing
+  a new, more surprising failure mode (people silently disappearing). If someone genuinely needs
+  removing from `assignedMembers` entirely, that's still a direct, manual edit to that field
+  itself — this hook only guarantees the minimum, not an exclusive source of truth.
+- **Verified against the exact reported scenario, not a simplified stand-in**: created a rota
+  entry with a real leader and a real special-item person, deliberately leaving
+  `assignedMembers` completely unset, and confirmed directly in the database that both were
+  automatically included — then confirmed both actually see the entry on their own real
+  Dashboard, with the special-item person specifically checked since that's the exact case
+  originally reported broken.
+- **Two further, more surgical tests, not assumed from the main case alone**: confirmed a third
+  member — referenced nowhere in this entry at all — correctly does *not* see it on their
+  Dashboard, ruling out accidental over-inclusion; and confirmed updating an existing entry's
+  leader later correctly re-runs the sync and adds the new leader, not just a fresh `create`.
+- A real TypeScript error surfaced and fixed during the build, caught by the compiler rather
+  than at runtime: `data`'s nested array fields aren't fully inferred inside a `beforeChange`
+  hook's loosely-typed `data` parameter, requiring explicit type annotations through the
+  `map`/`filter` chain rather than relying on inference.
+
+## Worship Rota: Translator, Choir Team, multi-select Special Items, and rethinking assignedMembers
+
+Feedback given directly, right after the previous round's serving-schedule fix: the rota needed
+finer-grained roles, and — a genuinely good question raised alongside the specific asks —
+whether `assignedMembers` still made sense at all once every real role had its own field.
+
+**Four schema changes**, each a real relationship to Members, not free text:
+
+- **Translator** — new, optional single-select field under Sermon, right after Speaker Name.
+- **Choir Team** — new, optional multi-select field under Worship Team, right after Leader Name.
+- **Special Items' Person Name** — converted from single-select to multi-select, so more than
+  one person (two vocalists on the same offering song, for instance) can be credited for the
+  same item.
+
+**On `assignedMembers` — answered directly, not just acted on.** Explained clearly what it
+actually does (the sole thing the Dashboard's serving-schedule query checks) before touching
+anything, then proposed a specific redesign rather than just picking removing-it or keeping-it
+unilaterally: once Translator, Choir Team, and multi-select Special Items covered nearly every
+realistic serving role, having admins also separately, manually maintain `assignedMembers` was
+redundant — and, by direct account, actively confusing. Asked one clarifying question before
+building anything, since the two paths genuinely diverge: hide the field entirely, or keep a way
+to manually add someone in a role with no dedicated field (a sound tech, a greeter). Given the
+latter answer, kept `assignedMembers` as the Dashboard's underlying index — fast, single-field
+query, unchanged — but made it fully internal (`admin.hidden: true`, in `WorshipRota.ts`) and
+added a new, genuinely separate `otherMembersServing` field that only ever contains exactly who
+an admin explicitly adds there. Deliberately did *not* reuse one field for both purposes — an
+admin seeing Translator, Leader, and Choir names appear in a field meant for manual "other"
+entries would just recreate the original confusion in a new shape.
+
+- **The auto-sync hook (built last round for leaderName/personName) extended to cover every new
+  source**: Translator, Choir Team, every Special Item person (now plural), and
+  `otherMembersServing` are all automatically folded into the hidden `assignedMembers` on every
+  save, deduplicated. Nothing new to remember, same principle as the original fix.
+- **Verified with a genuinely comprehensive seed, not a simplified stand-in**: created one entry
+  referencing seven different members across every source field, deliberately leaving
+  `assignedMembers` completely unset, and confirmed directly in the database that exactly those
+  seven — and no others — were present with zero duplicates.
+- **Checked five real member Dashboards individually, not just the aggregate result**: the
+  translator, a choir member, one of the two special-item vocalists, the manually-added "other"
+  server, and one entirely unrelated member, confirming each did or didn't see the entry exactly
+  as expected — covering every new/changed source field plus the negative case in one pass.
+- **Confirmed directly in the real admin panel**, not just from reading the schema, that
+  `assignedMembers` is genuinely absent from the edit form and `otherMembersServing` is there in
+  its place, and confirmed the public Rota page renders "Translated by," "Choir," and both
+  vocalist names on the same special item, matching the existing card's visual style with no
+  new component logic needed beyond two added lines.
+- **A real, honestly-flagged data-loss risk for existing production data**, reasoned through
+  rather than assumed away: converting `personName` from single- to multi-select changes its
+  underlying storage structure, the same category of change that lost data on this exact field
+  two rounds ago when it first became a relationship. This couldn't be directly tested against
+  a populated database in this sandbox (every migration here ran against a fresh one) — flagged
+  as a likely, not just possible, risk on that basis, consistent with the earlier, confirmed
+  case, rather than presented as safe without genuine evidence either way.
+
 ## Loading state
 
 `src/app/[locale]/(site)/loading.tsx` uses Next's built-in convention: while any page under

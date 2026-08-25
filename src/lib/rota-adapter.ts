@@ -1,10 +1,33 @@
-import type { WorshipRota, RotaPage as RotaPageGlobal, Media } from '@/payload-types'
+import type { WorshipRota, RotaPage as RotaPageGlobal, Media, Member } from '@/payload-types'
 import type { RotaEntry, RotaFilterOption, WorshipGuidelinesData } from '@/types/rota'
 import { rotaEyebrow as mockEyebrow, worshipGuidelines as mockGuidelines, rotaEntries as mockEntries } from '@/data/rota-mock'
 
 function mediaUrl(media: number | Media | null | undefined, fallback: string): string {
   if (media && typeof media === 'object' && media.url) return media.url
   return fallback
+}
+
+// leaderName/personName/translator/choirTeam are real relationships to
+// Members (leaderName/personName previously plain text) — a bare numeric
+// ID instead of the populated document would mean insufficient query
+// depth, so these fall back defensively rather than crashing on `.name`,
+// same reasoning as mediaUrl above.
+function memberName(member: number | Member | null | undefined, fallback: string): string {
+  if (member && typeof member === 'object' && member.name) return member.name
+  return fallback
+}
+
+// For hasMany relationships (choirTeam, and personName now that Special
+// Items allow more than one person) — same defensive-fallback reasoning,
+// just across an array. Filters out anything unpopulated rather than
+// showing a placeholder per-person, since a partial "TBD, Grace, TBD"
+// list would read worse than just omitting what didn't resolve.
+function memberNames(members: (number | Member)[] | null | undefined): string {
+  if (!members || members.length === 0) return ''
+  return members
+    .filter((m): m is Member => typeof m === 'object' && Boolean(m?.name))
+    .map((m) => m.name)
+    .join(', ')
 }
 
 export function adaptRotaEyebrow(doc: RotaPageGlobal | null): string {
@@ -34,14 +57,16 @@ export function adaptRotaEntries(docs: WorshipRota[]): RotaEntry[] {
       sermonSpeakerPhoto: mediaUrl(doc.sermon.speakerPhoto, '/images/rota-pastor-smith.jpg'),
       sermonSpeakerIsGuest: doc.sermon.isGuest ?? false,
       sermonTitle: doc.sermon.title,
+      sermonTranslatorName: doc.sermon.translator ? memberName(doc.sermon.translator, '') || undefined : undefined,
       worshipTeamName: doc.worshipTeam.teamName,
-      worshipLeaderName: doc.worshipTeam.leaderName,
+      worshipLeaderName: memberName(doc.worshipTeam.leaderName, 'TBD'),
       worshipBadge: doc.worshipTeam.badge ?? undefined,
+      choirTeamNames: memberNames(doc.worshipTeam.choirTeam) || undefined,
       teamMemberAvatars: members.slice(0, 3).map((m) => mediaUrl(m.photo, '')),
       teamMemberCount: members.length,
       specialItems: (doc.specialItems ?? []).map((item) => ({
         label: item.label,
-        personName: item.personName,
+        personName: memberNames(item.personName) || 'TBD',
         roleLabel: item.roleLabel ?? undefined,
       })),
     }

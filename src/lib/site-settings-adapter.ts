@@ -13,6 +13,14 @@ export function adaptSiteSettings(doc: SiteSetting | null): SiteSettings {
     phone: doc.phone || mockSiteSettings.phone,
     email: doc.email || mockSiteSettings.email,
     mapEmbedUrl: doc.mapEmbedUrl || mockSiteSettings.mapEmbedUrl,
+    // Previously never read here at all — the Footer's social icons were
+    // hardcoded, non-clickable spans with no href, regardless of what an
+    // admin entered in /admin. See Footer.tsx for the actual fix.
+    socialLinks: {
+      facebook: doc.socialLinks?.facebook || '',
+      instagram: doc.socialLinks?.instagram || '',
+      youtube: doc.socialLinks?.youtube || '',
+    },
     // Structural, code-owned — not sourced from the CMS. See file header.
     nav: mockSiteSettings.nav,
     footerLinks: mockSiteSettings.footerLinks,

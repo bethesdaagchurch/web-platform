@@ -35,7 +35,7 @@ export function MyEventsCard({ events: initialEvents }: { events: RegisteredEven
 
   return (
     <div className="rounded-card bg-white p-6 shadow-sm ring-1 ring-black/5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
         <h2 className="flex items-center gap-2 text-lg font-semibold text-ink">
           <CalendarCheck size={18} className="text-brand-navy" /> {t('myEvents')}
         </h2>

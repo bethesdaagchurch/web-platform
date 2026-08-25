@@ -97,6 +97,10 @@ export const siteSettings: SiteSettings = {
   phone: '+91 80 1234 5678',
   email: 'info@bethesdaag.church',
   mapEmbedUrl: '', // Optional override — left blank on purpose. resolveMapEmbedUrl() derives a real, working embed automatically from churchName + address when this is empty.
+  // Empty by default — the real church's actual social URLs live in
+  // Payload; these mock values simply have nothing to fall back to, since
+  // there's no meaningful placeholder for a URL that doesn't exist yet.
+  socialLinks: { facebook: '', instagram: '', youtube: '' },
   nav: [
     { key: 'home', label: 'Home', href: '/' },
     { key: 'about', label: 'About', href: '/about' },

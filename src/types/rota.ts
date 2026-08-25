@@ -18,9 +18,11 @@ export interface RotaEntry {
   sermonSpeakerPhoto: string
   sermonSpeakerIsGuest: boolean
   sermonTitle: string
+  sermonTranslatorName?: string
   worshipTeamName: string
   worshipLeaderName: string
   worshipBadge?: string
+  choirTeamNames?: string
   teamMemberAvatars: string[]
   teamMemberCount: number
   specialItems: RotaSpecialItem[]

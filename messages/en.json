@@ -10,7 +10,9 @@
   "header": {
     "login": "Login",
     "give": "Give",
-    "languageLabel": "Change language"
+    "languageLabel": "Change language",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "footer": {
     "connectHeading": "Connect",
@@ -340,7 +342,9 @@
     "guest": "Guest",
     "worshipTeam": "Worship Team",
     "ledBy": "Led by",
-    "specialItems": "Special Items"
+    "specialItems": "Special Items",
+    "translatedBy": "Translated by",
+    "choir": "Choir"
   },
   "groups": {
     "categories": {
@@ -473,7 +477,20 @@
     "sendResetLink": "Send Reset Link",
     "notYetAvailableHeading": "Online reset isn't available yet",
     "notYetAvailableMessage": "We're still setting this up. In the meantime, please reach out and we'll help you reset your password directly.",
-    "backToSignIn": "Back to Sign In"
+    "backToSignIn": "Back to Sign In",
+    "checkYourEmailHeading": "Check your email",
+    "checkYourEmailMessage": "If an account exists for that email, we've sent a link to reset your password. It'll expire in 1 hour.",
+    "sendFailedHeading": "We couldn't send that email",
+    "sendFailedMessage": "Something went wrong on our end. Please try again, or reach out and we'll help you reset your password directly.",
+    "resetPasswordHeading": "Choose a new password",
+    "resetPasswordSubtext": "Enter a new password for your account.",
+    "newPassword": "New Password",
+    "confirmNewPassword": "Confirm New Password",
+    "resetPassword": "Reset Password",
+    "resetting": "Resetting...",
+    "invalidOrExpiredToken": "This reset link is invalid or has expired. Please request a new one.",
+    "requestNewLink": "Request a new link",
+    "passwordResetSuccess": "Password reset! Taking you to your dashboard..."
   },
   "placeholders": {
     "blog": "Blog & Announcements",

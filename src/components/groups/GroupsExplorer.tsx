@@ -50,9 +50,17 @@ export function GroupsExplorer({
   return (
     <div className="mx-auto max-w-content px-6 py-10">
       <div className="grid gap-6 md:grid-cols-[260px_1fr]">
-        <GroupsSidebar categories={categories} active={category} onSelect={setCategory} />
+        {/* order-2/order-1 below: the sidebar is a desktop-left-column
+            element by design, but with no reordering it would be the
+            first thing a mobile visitor sees — filter buttons above the
+            page's own hero and title. Shown after the main content on
+            mobile instead, while staying visually first (left) on
+            desktop exactly as designed. */}
+        <div className="order-2 md:order-1">
+          <GroupsSidebar categories={categories} active={category} onSelect={setCategory} />
+        </div>
 
-        <div>
+        <div className="order-1 md:order-2">
           <GroupsHero data={heroData} searchValue={search} onSearchChange={setSearch} />
 
           {(category !== 'all' || search.trim() !== '') && (

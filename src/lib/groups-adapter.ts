@@ -31,6 +31,12 @@ export function adaptGroupListings(docs: Group[]): GroupListing[] {
     leaderPhoto: doc.leaderPhoto ? mediaUrl(doc.leaderPhoto, '') : undefined,
     category: doc.category,
     contactEmail: doc.contactEmail,
+    // A bare numeric ID instead of the populated document would mean
+    // insufficient query depth — skipped defensively rather than
+    // crashing on `.name`, same reasoning as adaptGroups on the Dashboard.
+    members: (doc.members ?? [])
+      .filter((m): m is Exclude<typeof m, number> => typeof m === 'object' && m !== null)
+      .map((m) => ({ id: String(m.id), name: m.name })),
   }))
 }
 

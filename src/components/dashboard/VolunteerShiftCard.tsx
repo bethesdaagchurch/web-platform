@@ -9,7 +9,7 @@ export function VolunteerShiftCard({ shift }: { shift: VolunteerShiftData }) {
       <h2 className="text-lg font-semibold text-white">{t('volunteerShifts')}</h2>
 
       <div className="mt-4 rounded-card bg-white/10 p-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-gold-light">{shift.dayLabel}</p>
           {shift.time && (
             <span className="rounded-full bg-brand-gold px-2.5 py-1 text-xs font-semibold text-brand-navy-dark">

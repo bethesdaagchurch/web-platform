@@ -45,6 +45,11 @@ export function RotaEntryCard({ entry }: { entry: RotaEntry }) {
                 {entry.sermonSpeakerIsGuest && <span className="font-normal text-ink-muted"> ({t('guest')})</span>}
               </p>
               <p className="text-xs italic text-ink-muted">&ldquo;{entry.sermonTitle}&rdquo;</p>
+              {entry.sermonTranslatorName && (
+                <p className="mt-1 text-xs text-ink-muted">
+                  {t('translatedBy')}: {entry.sermonTranslatorName}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -58,6 +63,11 @@ export function RotaEntryCard({ entry }: { entry: RotaEntry }) {
           <p className="text-xs text-ink-muted">
             {t('ledBy')}: {entry.worshipLeaderName}
           </p>
+          {entry.choirTeamNames && (
+            <p className="text-xs text-ink-muted">
+              {t('choir')}: {entry.choirTeamNames}
+            </p>
+          )}
           {entry.teamMemberAvatars.length > 0 && (
             <div className="mt-2 flex -space-x-2">
               {entry.teamMemberAvatars.map((src, i) => (
