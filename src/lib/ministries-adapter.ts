@@ -7,7 +7,6 @@ import {
   smallGroups as mockSmallGroups,
   areaOfInterestOptions as mockAreaOptions,
 } from '@/data/ministries-mock'
-import { ministries as mockHomepageMinistries } from '@/data/homepage-mock'
 
 function mediaUrl(media: number | Media | null | undefined, fallback: string): string {
   if (media && typeof media === 'object' && media.url) return media.url
@@ -23,7 +22,11 @@ export function adaptMinistriesHero(doc: MinistriesPageGlobal | null): MinistryH
 }
 
 export function adaptMinistryItems(docs: Ministry[]): MinistryItem[] {
-  if (!docs || docs.length === 0) return mockMinistryItems
+  // Deliberately not falling back to mock ministries — same reasoning as
+  // Worship Rota (see rota-adapter.ts): these are specific, factual
+  // claims about real ministries that supposedly exist, contactable by
+  // real email addresses. An empty database means an honest empty list.
+  if (!docs || docs.length === 0) return []
   return docs.map((doc, i) => ({
     id: String(doc.id),
     slug: doc.slug,
@@ -57,8 +60,10 @@ export function adaptAreaOfInterestOptions(doc: MinistriesPageGlobal | null): Ar
 
 // Feeds the homepage's "Find Your Place" band — a different, simpler shape
 // (icon + name + href) than the full MinistryItem used on /ministries.
+// Same reasoning as adaptMinistryItems above: no mock fallback, since
+// these claim to be real, contactable ministries.
 export function adaptHomepageMinistries(docs: Ministry[]): HomepageMinistry[] {
-  if (!docs || docs.length === 0) return mockHomepageMinistries
+  if (!docs || docs.length === 0) return []
   return docs.map((doc) => ({
     id: String(doc.id),
     name: doc.name,

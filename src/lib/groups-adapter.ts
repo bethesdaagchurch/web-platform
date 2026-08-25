@@ -1,6 +1,6 @@
 import type { GroupsPage as GroupsPageGlobal, Group, Media } from '@/payload-types'
 import type { GroupsHeroData, GroupListing, GroupsQuoteData } from '@/types/groups'
-import { groupsHero as mockHero, groupListings as mockListings, groupsQuote as mockQuote } from '@/data/groups-mock'
+import { groupsHero as mockHero, groupsQuote as mockQuote } from '@/data/groups-mock'
 
 function mediaUrl(media: number | Media | null | undefined, fallback: string): string {
   if (media && typeof media === 'object' && media.url) return media.url
@@ -18,7 +18,11 @@ export function adaptGroupsHero(doc: GroupsPageGlobal | null): GroupsHeroData {
 }
 
 export function adaptGroupListings(docs: Group[]): GroupListing[] {
-  if (!docs || docs.length === 0) return mockListings
+  // Deliberately not falling back to mock groups — same reasoning as
+  // Worship Rota and Ministries: specific, factual claims about real
+  // groups that supposedly meet, at a real time and place, with a real
+  // leader. An empty database means an honest empty list.
+  if (!docs || docs.length === 0) return []
   return docs.map((doc) => ({
     id: String(doc.id),
     slug: doc.slug,

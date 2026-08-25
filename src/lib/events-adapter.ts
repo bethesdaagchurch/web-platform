@@ -9,7 +9,6 @@ import type {
 import type { EventItem as HomepageEventItem } from '@/types/homepage'
 import {
   eventsHero as mockHero,
-  eventEntries as mockEntries,
   communityFocus as mockCommunityFocus,
   newsletterCta as mockNewsletterCta,
 } from '@/data/events-mock'
@@ -32,12 +31,20 @@ export const categoryMeta: Record<string, { label: string; badgeStyle: EventBadg
   conferences: { label: 'CONFERENCES', badgeStyle: 'navy' },
 }
 
+// Returns null (not a mock fallback) when there's no real, admin-selected
+// featured event — the whole point of this hero is showcasing one
+// specific, real event prominently (large image, real title/date), so an
+// "empty" version of that same layout would look broken rather than
+// honest. The page below skips rendering this section entirely in that
+// case, same principle as Worship Rota/Ministries/Groups not fabricating
+// list content, just applied to a single-featured-item hero instead of a
+// list.
 export function adaptEventsHero(
   doc: EventsPageGlobal | null,
   labels: { registerNow: string; learnMore: string }
-): EventsHeroData {
+): EventsHeroData | null {
   const featuredEvent = doc?.hero?.featuredEvent
-  if (!doc?.hero || !featuredEvent || typeof featuredEvent !== 'object') return mockHero
+  if (!doc?.hero || !featuredEvent || typeof featuredEvent !== 'object') return null
 
   return {
     badge: doc.hero.badge || mockHero.badge,
@@ -59,7 +66,12 @@ export function adaptEventsHero(
 }
 
 export function adaptEventEntries(docs: EventDoc[]): EventEntry[] {
-  if (!docs || docs.length === 0) return mockEntries
+  // Deliberately not falling back to mock events — same reasoning as
+  // Worship Rota/Ministries/Groups: specific, factual, time-sensitive
+  // claims about real events on real dates. Showing a fabricated event
+  // list could genuinely mislead a visitor into expecting something
+  // that doesn't exist. An empty database means an honest empty list.
+  if (!docs || docs.length === 0) return []
   return docs.map((doc) => {
     const meta = categoryMeta[doc.category] ?? { label: doc.category.toUpperCase(), badgeStyle: 'navy' as EventBadgeStyle }
     return {
@@ -105,9 +117,10 @@ export function adaptNewsletterCta(doc: EventsPageGlobal | null): NewsletterCtaD
 
 // Feeds the homepage's "Upcoming at Bethesda" cards — a simpler shape
 // (month/day text instead of a raw ISO date, no description/actions) than
-// the full EventEntry used on /events.
+// the full EventEntry used on /events. Same no-mock-fallback reasoning as
+// adaptEventEntries above.
 export function adaptHomepageEvents(docs: EventDoc[]): HomepageEventItem[] {
-  if (!docs || docs.length === 0) return mockHomepageEvents
+  if (!docs || docs.length === 0) return []
   return docs.map((doc) => {
     const d = new Date(doc.startDate)
     return {

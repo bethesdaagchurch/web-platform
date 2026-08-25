@@ -94,7 +94,7 @@ export function GroupsExplorer({
           <div className="mt-6 grid gap-6 sm:grid-cols-2">
             {visible.length === 0 ? (
               <p className="rounded-card bg-surface-cream p-6 text-center text-sm text-ink-muted sm:col-span-2">
-                {t('noResults')}
+                {groups.length === 0 ? t('noGroupsAtAll') : t('noResults')}
               </p>
             ) : (
               visible.map((group, i) => (

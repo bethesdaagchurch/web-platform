@@ -24,9 +24,11 @@ export default async function SermonsPage({ params }: { params: Promise<{ locale
     topic: t('allTopics'),
   })
 
+  const heroData = adaptSermonHero(sermonsPage)
+
   return (
     <>
-      <SermonHero data={adaptSermonHero(sermonsPage)} />
+      {heroData && <SermonHero data={heroData} />}
       <SermonsExplorer
         sermons={entries}
         seriesOptions={seriesOptions}

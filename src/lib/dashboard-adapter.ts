@@ -106,6 +106,10 @@ export function adaptRotaAssignments(entries: WorshipRota[]): RotaAssignmentItem
 // the join-status lookup on the listing pages.
 export function adaptPendingRequests(requests: JoinRequest[]): PendingRequestItem[] {
   return requests
+    // Same defensive skip as buildRequestStatusMap (join-requests-adapter.ts)
+    // — target can be missing entirely, not just unpopulated, if its
+    // group/ministry was ever deleted directly at the database level.
+    .filter((r) => Boolean(r.target))
     .filter((r) => r.status === 'pending' || r.status === 'declined')
     .filter((r): r is typeof r & { target: { value: object } } => typeof r.target.value === 'object' && r.target.value !== null)
     .map((r) => ({

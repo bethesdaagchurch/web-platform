@@ -22,7 +22,7 @@ export default async function SermonDetailPage({
   const sermonsPage = await payload.findGlobal({ slug: 'sermons-page', locale: typedLocale })
   const hero = adaptSermonHero(sermonsPage)
 
-  if (slug === hero.slug) {
+  if (hero && slug === hero.slug) {
     return (
       <div className="mx-auto max-w-content px-6 py-16">
         <SermonVideoPlayer youtubeUrl={hero.youtubeUrl} title={hero.title} />

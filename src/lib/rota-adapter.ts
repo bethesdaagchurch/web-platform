@@ -1,6 +1,6 @@
 import type { WorshipRota, RotaPage as RotaPageGlobal, Media, Member } from '@/payload-types'
 import type { RotaEntry, RotaFilterOption, WorshipGuidelinesData } from '@/types/rota'
-import { rotaEyebrow as mockEyebrow, worshipGuidelines as mockGuidelines, rotaEntries as mockEntries } from '@/data/rota-mock'
+import { rotaEyebrow as mockEyebrow, worshipGuidelines as mockGuidelines } from '@/data/rota-mock'
 
 function mediaUrl(media: number | Media | null | undefined, fallback: string): string {
   if (media && typeof media === 'object' && media.url) return media.url
@@ -45,7 +45,18 @@ export function adaptWorshipGuidelines(doc: RotaPageGlobal | null): WorshipGuide
 }
 
 export function adaptRotaEntries(docs: WorshipRota[]): RotaEntry[] {
-  if (!docs || docs.length === 0) return mockEntries
+  // Deliberately NOT falling back to mock data here, unlike every other
+  // adapter in this project — those mock fallbacks stand in for generic
+  // page copy (a hero heading, a placeholder image) where showing
+  // something reasonable-looking is harmless. This is different: rota
+  // entries are specific, factual, time-sensitive claims about who is
+  // actually preaching or leading worship on a given date. Showing a
+  // fabricated schedule as if it were real could genuinely mislead a
+  // visitor into expecting a specific pastor or service that doesn't
+  // exist — reported directly after this was noticed. An empty database
+  // means an honest empty list, handled by RotaExplorer showing "no
+  // service currently assigned" rather than a made-up one.
+  if (!docs || docs.length === 0) return []
   return docs.map((doc) => {
     const members = doc.worshipTeam.members ?? []
     return {

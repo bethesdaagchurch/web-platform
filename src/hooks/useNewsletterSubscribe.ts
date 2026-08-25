@@ -9,7 +9,7 @@ export function useNewsletterSubscribe() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
 
-  async function subscribe(email: string, firstName: string) {
+  async function subscribe(email: string, firstName: string, preferences?: { sermonNotes?: boolean; eventReminders?: boolean }) {
     setStatus('loading')
     setError(null)
 
@@ -17,7 +17,13 @@ export function useNewsletterSubscribe() {
       const res = await fetch('/api/newsletter/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, firstName, locale }),
+        body: JSON.stringify({
+          email,
+          firstName,
+          locale,
+          sermonNotes: preferences?.sermonNotes ?? false,
+          eventReminders: preferences?.eventReminders ?? false,
+        }),
       })
 
       if (!res.ok) {

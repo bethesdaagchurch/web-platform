@@ -32,6 +32,15 @@ export const Events: CollectionConfig = {
       admin: { description: 'Leave blank for a single-day event. Setting this marks every day in the range gold on the calendar (multi-day conference/retreat) instead of a single navy dot.' },
     },
     { name: 'time', type: 'text', localized: true, required: true, admin: { description: 'e.g. "7:00 PM - 9:00 PM" or "All Day"' } },
+    {
+      name: 'reminderSentAt',
+      type: 'date',
+      admin: {
+        hidden: true,
+        description:
+          'Internal only \u2014 set automatically by the daily reminder cron job (src/app/api/cron/send-digest/route.ts) once a reminder email has gone out for this event, so the same event can never be reminded about twice. Not meant for manual editing.',
+      },
+    },
     { name: 'location', type: 'text', localized: true, required: true },
     {
       name: 'cost',

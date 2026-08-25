@@ -54,9 +54,11 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
     { value: 'worship', label: t('worship') },
   ]
 
+  const heroData = adaptEventsHero(eventsPage, { registerNow: tHero('registerNow'), learnMore: tHero('learnMore') })
+
   return (
     <>
-      <EventsHero data={adaptEventsHero(eventsPage, { registerNow: tHero('registerNow'), learnMore: tHero('learnMore') })} />
+      {heroData && <EventsHero data={heroData} />}
       <EventsExplorer
         events={adaptEventEntries(eventsResult.docs)}
         categories={eventCategories}

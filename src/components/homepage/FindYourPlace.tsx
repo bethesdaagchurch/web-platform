@@ -15,6 +15,9 @@ const iconMap = {
 
 export async function FindYourPlace({ ministries }: { ministries: Ministry[] }) {
   const t = await getTranslations('homepage.findYourPlace')
+  // No real ministries at all — skip the section entirely rather than
+  // show a heading over an empty grid.
+  if (ministries.length === 0) return null
 
   return (
     <section className="bg-brand-navy py-16">

@@ -44,6 +44,31 @@ export function RotaExplorer({
 
   const monthLabel = monthOptions.find((o) => o.value === month)?.label ?? ''
 
+  // Genuinely no rota entries exist at all — distinct from the filtered
+  // list below coming up empty for one particular month/ministry
+  // selection. Shown without the filters sidebar entirely, since there's
+  // nothing real to filter yet — empty dropdowns next to an empty state
+  // would just look broken rather than helpful.
+  if (entries.length === 0) {
+    return (
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wide text-brand-gold">{t('ministrySchedule')}</p>
+        <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
+          <h1 className="text-3xl font-semibold text-brand-navy md:text-4xl">{t('worshipRota')}</h1>
+          {isAdmin && (
+            <NextLink
+              href="/admin/collections/worship-rota"
+              className="inline-flex items-center gap-1.5 rounded-md border border-black/10 px-4 py-2 text-sm font-medium text-ink hover:bg-surface-cream"
+            >
+              <Pencil size={14} /> {t('editRota')}
+            </NextLink>
+          )}
+        </div>
+        <p className="mt-6 rounded-card bg-surface-cream p-6 text-center text-sm text-ink-muted">{t('noServiceAssigned')}</p>
+      </div>
+    )
+  }
+
   return (
     <div className="grid gap-6 md:grid-cols-[220px_1fr]">
       {/* Filters sidebar — order-2/order-1 below for the same reason as

@@ -114,7 +114,9 @@ export function SermonsExplorer({
           ))}
         </div>
       ) : (
-        <p className="mt-10 text-center text-sm text-ink-muted">{t('noResults')}</p>
+        <p className="mt-10 text-center text-sm text-ink-muted">
+          {sermons.length === 0 ? t('noSermonsAtAll') : t('noResults')}
+        </p>
       )}
 
       {hasMore && (

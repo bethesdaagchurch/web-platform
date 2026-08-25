@@ -154,7 +154,8 @@
       "submitting": "Submitting...",
       "submit": "Submit Request"
     },
-    "backToMinistries": "Back to Ministries"
+    "backToMinistries": "Back to Ministries",
+    "noMinistriesAtAll": "There are currently no ministries listed."
   },
   "sermons": {
     "allSeries": "All Series",
@@ -165,7 +166,8 @@
     "loadMore": "Load More Sermons",
     "hero": {
       "watchNow": "Watch Now"
-    }
+    },
+    "noSermonsAtAll": "There are currently no sermons available."
   },
   "events": {
     "categories": {
@@ -218,7 +220,8 @@
     "hero": {
       "registerNow": "Register Now",
       "learnMore": "Learn More"
-    }
+    },
+    "noEventsAtAll": "There are currently no events scheduled."
   },
   "legal": {
     "contents": "Contents"
@@ -344,7 +347,8 @@
     "ledBy": "Led by",
     "specialItems": "Special Items",
     "translatedBy": "Translated by",
-    "choir": "Choir"
+    "choir": "Choir",
+    "noServiceAssigned": "There is currently no service assigned."
   },
   "groups": {
     "categories": {
@@ -360,7 +364,8 @@
     "clearAll": "Clear All",
     "noResults": "No groups match your search yet.",
     "loadMore": "Load More Groups",
-    "filtersButton": "Filters"
+    "filtersButton": "Filters",
+    "noGroupsAtAll": "There are currently no groups listed."
   },
   "volunteer": {
     "yourName": "Your Name",
@@ -512,7 +517,9 @@
     "checkYourEmail": "Check your email to confirm your subscription!",
     "confirmedHeading": "You're Confirmed!",
     "confirmedMessage": "Thank you for confirming your subscription. You’ll now receive our updates straight to your inbox.",
-    "confirmedButton": "Back to Homepage"
+    "confirmedButton": "Back to Homepage",
+    "sermonNotesLabel": "Weekly sermon notes",
+    "eventRemindersLabel": "Event reminders"
   },
   "groupMembers": {
     "heading": "Group Members",

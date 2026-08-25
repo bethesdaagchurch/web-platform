@@ -1,7 +1,7 @@
 import type { Sermon as SermonDoc, SermonsPage as SermonsPageGlobal, Media } from '@/payload-types'
 import type { SermonHeroData, SermonEntry, FilterOption, PodcastCtaData } from '@/types/sermons'
 import type { Sermon as HomepageSermon } from '@/types/homepage'
-import { sermonHero as mockHero, sermonEntries as mockEntries, podcastCta as mockPodcastCta } from '@/data/sermons-mock'
+import { sermonHero as mockHero, podcastCta as mockPodcastCta } from '@/data/sermons-mock'
 
 function mediaUrl(media: number | Media | null | undefined, fallback: string): string {
   if (media && typeof media === 'object' && media.url) return media.url
@@ -31,9 +31,14 @@ function initialsFrom(name: string): string {
     .join('')
 }
 
-export function adaptSermonHero(doc: SermonsPageGlobal | null): SermonHeroData {
+// Returns null (not a mock fallback) when there's no real, admin-selected
+// featured sermon — same reasoning as adaptEventsHero: this hero is built
+// around showcasing one specific, real sermon prominently, so an "empty"
+// version of that layout would look broken rather than honest. The page
+// skips rendering this section entirely in that case.
+export function adaptSermonHero(doc: SermonsPageGlobal | null): SermonHeroData | null {
   const featuredSermon = doc?.hero?.featuredSermon
-  if (!doc?.hero || !featuredSermon || typeof featuredSermon !== 'object') return mockHero
+  if (!doc?.hero || !featuredSermon || typeof featuredSermon !== 'object') return null
 
   return {
     badge: doc.hero.badge || mockHero.badge,
@@ -47,7 +52,11 @@ export function adaptSermonHero(doc: SermonsPageGlobal | null): SermonHeroData {
 }
 
 export function adaptSermonEntries(docs: SermonDoc[]): SermonEntry[] {
-  if (!docs || docs.length === 0) return mockEntries
+  // Deliberately not falling back to mock sermons — same reasoning as
+  // Worship Rota/Ministries/Groups/Events: specific, factual claims about
+  // real sermons that were actually preached. An empty database means an
+  // honest empty list.
+  if (!docs || docs.length === 0) return []
   return docs.map((doc) => ({
     id: String(doc.id),
     slug: doc.slug,
@@ -112,35 +121,50 @@ export function adaptPodcastCta(doc: SermonsPageGlobal | null): PodcastCtaData {
 // Feeds the homepage's compact "Latest Word" section: the hero sermon plus
 // the 3 most recent archive entries, mapped to the homepage's simpler
 // Sermon shape (no series/scripture/description needed there).
+//
+// No mock fallback for the featured slot — if no sermon is explicitly
+// marked "featured" in /admin, the most recently dated real sermon is
+// promoted into that slot instead. Still entirely real, honest data, just
+// repurposed slightly, rather than fabricating a sermon and speaker name
+// that don't exist. Returns [] only when there's truly no real sermon
+// data anywhere — LatestSermons skips rendering the whole section in
+// that case rather than crashing on an empty array or showing a section
+// with nothing real in it.
 export function adaptHomepageSermons(heroDoc: SermonsPageGlobal | null, entryDocs: SermonDoc[]): HomepageSermon[] {
   const featuredSermon = heroDoc?.hero?.featuredSermon
   const entries = adaptSermonEntries(entryDocs)
   const sorted = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
-  const featured: HomepageSermon =
-    featuredSermon && typeof featuredSermon === 'object'
-      ? {
-          id: String(featuredSermon.id),
-          slug: featuredSermon.slug,
-          title: featuredSermon.title,
-          speaker: featuredSermon.speakerName,
-          date: featuredSermon.date,
-          thumbnail: mediaUrl(featuredSermon.thumbnail, mockHero.backgroundImage),
-          featured: true,
-        }
-      : {
-          id: 'featured',
-          slug: mockHero.slug,
-          title: mockHero.title,
-          speaker: 'Rev. Dr. Abraham Thomas',
-          date: '2023-10-29',
-          thumbnail: mockHero.backgroundImage,
-          featured: true,
-        }
+  if (featuredSermon && typeof featuredSermon === 'object') {
+    const featured: HomepageSermon = {
+      id: String(featuredSermon.id),
+      slug: featuredSermon.slug,
+      title: featuredSermon.title,
+      speaker: featuredSermon.speakerName,
+      date: featuredSermon.date,
+      thumbnail: mediaUrl(featuredSermon.thumbnail, mockHero.backgroundImage),
+      featured: true,
+    }
+    return [
+      featured,
+      ...sorted.filter((s) => s.id !== featured.id).slice(0, 3).map((entry) => ({
+        id: entry.id,
+        slug: entry.slug,
+        title: entry.title,
+        speaker: entry.speakerName,
+        date: entry.date,
+        thumbnail: entry.thumbnail,
+      })),
+    ]
+  }
 
+  // No sermon explicitly marked "featured" — promote the most recent real
+  // one instead of fabricating one, or return [] if there are none at all.
+  if (sorted.length === 0) return []
+  const [mostRecent, ...rest] = sorted
   return [
-    featured,
-    ...sorted.slice(0, 3).map((entry) => ({
+    { id: mostRecent.id, slug: mostRecent.slug, title: mostRecent.title, speaker: mostRecent.speakerName, date: mostRecent.date, thumbnail: mostRecent.thumbnail, featured: true },
+    ...rest.slice(0, 3).map((entry) => ({
       id: entry.id,
       slug: entry.slug,
       title: entry.title,

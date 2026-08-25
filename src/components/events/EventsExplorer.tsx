@@ -87,7 +87,9 @@ export function EventsExplorer({
               ))}
             </div>
           ) : (
-            <p className="mt-10 text-center text-sm text-ink-muted">{t('noResults')}</p>
+            <p className="mt-10 text-center text-sm text-ink-muted">
+              {events.length === 0 ? t('noEventsAtAll') : t('noResults')}
+            </p>
           )}
 
           {hasMore && (

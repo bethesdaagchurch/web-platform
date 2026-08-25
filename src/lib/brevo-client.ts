@@ -51,3 +51,35 @@ export async function callBrevoTransactionalAPI({
     throw new Error(`Brevo transactional email failed: ${res.status} ${body}`)
   }
 }
+
+// Fetches every contact on a given Brevo list — used by the daily digest
+// cron (src/app/api/cron/send-digest/route.ts) to find who's subscribed
+// to sermon notes or event reminders. Brevo paginates this endpoint at
+// up to 500 per page; loops until a page comes back with fewer than the
+// requested limit, rather than assuming a small church's subscriber
+// count will always fit in one page.
+export async function fetchBrevoListContacts(listId: string): Promise<{ email: string; firstName?: string }[]> {
+  const apiKey = process.env.BREVO_API_KEY
+  if (!apiKey) throw new Error('BREVO_API_KEY is not set.')
+
+  const contacts: { email: string; firstName?: string }[] = []
+  const limit = 500
+  let offset = 0
+
+  for (;;) {
+    const res = await fetch(`https://api.brevo.com/v3/contacts/lists/${listId}/contacts?limit=${limit}&offset=${offset}`, {
+      headers: { Accept: 'application/json', 'api-key': apiKey },
+    })
+    if (!res.ok) {
+      const body = await res.text()
+      throw new Error(`Brevo get list contacts failed: ${res.status} ${body}`)
+    }
+    const data = await res.json()
+    const page: { email: string; attributes?: { FIRSTNAME?: string } }[] = data.contacts ?? []
+    contacts.push(...page.map((c) => ({ email: c.email, firstName: c.attributes?.FIRSTNAME })))
+    if (page.length < limit) break
+    offset += limit
+  }
+
+  return contacts
+}

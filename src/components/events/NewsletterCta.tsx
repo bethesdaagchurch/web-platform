@@ -11,11 +11,13 @@ export function NewsletterCta({ data }: { data: NewsletterCtaData }) {
   const tNewsletter = useTranslations('newsletter')
   const [email, setEmail] = useState('')
   const [firstName, setFirstName] = useState('')
+  const [sermonNotes, setSermonNotes] = useState(true)
+  const [eventReminders, setEventReminders] = useState(true)
   const { status, error, subscribe } = useNewsletterSubscribe()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    await subscribe(email, firstName)
+    await subscribe(email, firstName, { sermonNotes, eventReminders })
   }
 
   return (
@@ -65,6 +67,29 @@ export function NewsletterCta({ data }: { data: NewsletterCtaData }) {
               {status === 'loading' ? t('submitting') : data.buttonLabel}
             </button>
           </form>
+        )}
+
+        {status !== 'success' && (
+          <div className="mx-auto mt-3 flex max-w-md flex-wrap justify-center gap-x-4 gap-y-1.5 text-xs text-white/70">
+            <label className="flex items-center gap-1.5">
+              <input
+                type="checkbox"
+                checked={sermonNotes}
+                onChange={(e) => setSermonNotes(e.target.checked)}
+                className="h-3.5 w-3.5 rounded border-white/30 bg-transparent"
+              />
+              {tNewsletter('sermonNotesLabel')}
+            </label>
+            <label className="flex items-center gap-1.5">
+              <input
+                type="checkbox"
+                checked={eventReminders}
+                onChange={(e) => setEventReminders(e.target.checked)}
+                className="h-3.5 w-3.5 rounded border-white/30 bg-transparent"
+              />
+              {tNewsletter('eventRemindersLabel')}
+            </label>
+          </div>
         )}
 
         {error && (

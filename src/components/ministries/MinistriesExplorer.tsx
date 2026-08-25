@@ -64,7 +64,11 @@ export function MinistriesExplorer({
         ))}
       </div>
 
-      {visible.length === 0 && <p className="mt-10 text-center text-sm text-ink-muted">{t('emptyState')}</p>}
+      {visible.length === 0 && (
+        <p className="mt-10 text-center text-sm text-ink-muted">
+          {ministries.length === 0 ? t('noMinistriesAtAll') : t('emptyState')}
+        </p>
+      )}
     </section>
   )
 }

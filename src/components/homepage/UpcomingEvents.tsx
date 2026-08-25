@@ -6,6 +6,9 @@ import type { EventItem } from '@/types/homepage'
 
 export async function UpcomingEvents({ events }: { events: EventItem[] }) {
   const t = await getTranslations('homepage.upcomingEvents')
+  // No real events at all — skip the section entirely rather than show a
+  // heading over an empty grid.
+  if (events.length === 0) return null
 
   return (
     <section className="mx-auto max-w-content px-6 py-16">

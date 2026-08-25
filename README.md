@@ -1631,6 +1631,188 @@ entries would just recreate the original confusion in a new shape.
   as a likely, not just possible, risk on that basis, consistent with the earlier, confirmed
   case, rather than presented as safe without genuine evidence either way.
 
+## Weekly sermon notes and event reminders: a new architectural capability
+
+Raised as an open question — "how do we achieve this?" — rather than a specific spec, so the
+first real work was explaining what kind of feature this actually was before building anything.
+Every email built on this project until now fires because something just happened (a form
+submission). Sermon notes and event reminders fire because of the *passage of time*, with
+nothing to trigger them — a genuinely new capability, not a variation on the existing pattern.
+
+**Researched the actual cost before committing to an approach**, rather than assuming a paid
+tier would be needed: confirmed directly that Vercel's free Hobby plan allows daily-frequency
+cron jobs, which is sufficient for both "weekly" and "3 days before" without needing Pro. Two
+real design questions — who can subscribe, and what should trigger an event reminder — were
+asked directly rather than assumed, since both genuinely changed the implementation shape.
+
+- **Two new, dedicated Brevo lists**, extending the existing newsletter double opt-in rather
+  than building a second, parallel signup system. Two new checkboxes ("Weekly sermon notes,"
+  "Event reminders"), default-checked, added to both places the newsletter form already
+  appears — verified both directions directly: submitting with both checked included all three
+  Brevo lists in the request, and unchecking one correctly excluded just that one.
+- **A new, secured daily cron route** (`/api/cron/send-digest`), authenticated using Vercel's
+  own documented `CRON_SECRET` pattern — verified directly, not assumed: no auth header and a
+  wrong secret both correctly return 401, the real secret returns 200.
+- **`Events.reminderSentAt`** so no event can be reminded about twice — verified by running the
+  cron twice against the same seeded event: the first run sent reminders and set the field, the
+  second run correctly sent nothing.
+- **Sermon notes only send on Mondays**, verified using a temporary, clearly-marked day-check
+  override (reverted immediately after): confirmed the job correctly stays silent on a
+  non-Monday, and correctly sends — with the real sermon's title showing up correctly in the
+  email subject — when the day matches.
+- **A real build error hit and fixed during testing, not glossed over**: an early attempt to
+  temporarily stub the Brevo list-fetch function for testing left genuinely unreachable code
+  behind a `return` statement, which confused TypeScript's control-flow narrowing into a type
+  error. Fixed by replacing the function body cleanly instead of layering a stub on top of the
+  real implementation, confirmed with a clean rebuild.
+- **A small, genuine inefficiency noticed and fixed along the way**: the event-reminder job was
+  fetching the full subscriber list even on days with zero events to remind about — now only
+  fetches when there's actually a reminder to send.
+- **`.env.example` brought fully up to date**, a genuinely pre-existing gap discovered while
+  adding the new Brevo/cron variables — the file had been stale since before Brevo, Razorpay,
+  and the email adapter existed, missing every variable added since. Rebuilt by searching the
+  actual codebase for every `process.env` reference in real use, rather than guessing from
+  memory, so it now reflects what the project genuinely needs, not what it needed originally.
+- **All temporary test code confirmed fully removed before shipping** — a project-wide search
+  for the debug markers used during testing came back empty, checked explicitly rather than
+  assumed clean from memory of having removed them.
+
+## Worship Rota: an empty database no longer shows fabricated schedule data
+
+Reported directly: with zero real Worship Rota entries in the database, the public page fell
+back to `rota-mock.ts`'s placeholder content — a made-up preacher, a made-up worship leader, a
+made-up time — displayed as if it were real. Agreed this was a genuine problem, not a stylistic
+preference: every other mock fallback on this project stands in for generic page copy (a hero
+heading, a placeholder image) where showing something reasonable-looking is harmless. This was
+categorically different — specific, factual, time-sensitive claims about who is actually
+serving on a given date, which could genuinely mislead a visitor into expecting a pastor or
+service that doesn't exist.
+
+- **Checked where else this same pattern might apply before fixing just the one spot** — the
+  Dashboard's own "My Serving Schedule" card was confirmed to already handle this correctly (an
+  empty result there is an honest "you have no upcoming assignments," never a fallback), so the
+  fix is scoped precisely to the one place it was actually needed.
+- **`adaptRotaEntries` no longer falls back to mock data at all** — an empty database now
+  produces a genuinely empty list, with a real, worded explanation of why (see below), not a
+  silent substitution.
+- **Two genuinely different empty states, kept distinct rather than merged into one generic
+  message**: a database with zero entries at all now shows "There is currently no service
+  assigned," with the filters sidebar removed entirely (empty dropdowns next to an empty state
+  would look broken, not helpful). Selecting a specific month/ministry combination that happens
+  to match nothing — while other real entries exist elsewhere — still shows the original,
+  separate "no entries for this selection" message, with the filters still available, since
+  other selections do have something to show.
+- **Verified both paths directly, not just the one reported**: confirmed the genuinely-empty
+  case shows the new message with no fake data and no filters sidebar; then seeded two real
+  entries in different months and ministries and confirmed a legitimate zero-match filter
+  selection still shows the original message with the filters sidebar intact — proving the two
+  states are correctly, distinctly triggered rather than one accidentally masking the other.
+
+## The same fix applied to Ministries, Groups, Events, and Sermons
+
+Requested directly as a follow-up to the Rota fix: the same fabricated-data problem existed on
+four more pages. Rather than treat each collection as a one-off, the same underlying principle
+from Rota was applied consistently: specific, factual claims about real things (a ministry that
+supposedly exists, a group that supposedly meets, an event on a real date, a sermon that was
+actually preached) never fall back to mock data — an empty database means an honest empty state,
+not a fabricated one.
+
+- **Ministries and Groups** — `adaptMinistryItems`, `adaptHomepageMinistries`, and
+  `adaptGroupListings` no longer fall back to mock data. Both listing pages already had *some*
+  empty-state handling for a filtered-to-zero search, reused rather than rebuilt — extended with
+  a second, more accurate message specifically for a genuinely empty database, since "no results
+  in this category" reads oddly when there was never any real data to filter in the first place.
+- **Events and Sermons needed a genuinely different fix, not just the same pattern copied over.**
+  Both pages showcase one specific "featured" item in a large hero section, previously falling
+  back to an entirely fabricated event or sermon — fake title, fake date, fake image. Forcing an
+  "empty" version of a layout built around showcasing one specific thing would have looked
+  broken rather than honest, so `adaptEventsHero`/`adaptSermonHero` now return `null` instead,
+  and both pages simply skip rendering that hero section entirely when there's nothing real to
+  feature.
+- **A real, more-than-just-missing-fallback problem, found and fixed properly rather than
+  patched over**: the homepage's featured-sermon widget didn't just fall back to mock data when
+  nothing was explicitly marked "featured" — it fabricated an entire sermon, complete with an
+  invented pastor name ("Rev. Dr. Abraham Thomas") that doesn't exist. Reworked
+  `adaptHomepageSermons` to promote the most recently dated *real* sermon into that slot instead
+  when nothing's explicitly featured — still entirely honest, just repurposed real data, only
+  falling back to an empty result when there's truly nothing real to show at all. Verified this
+  specific scenario directly: seeded one real, unfeatured sermon and confirmed its real title
+  and real speaker name appear correctly, with no trace of the fabricated name anywhere.
+- **Two real, would-be-shipped bugs caught during testing, not discovered afterward.**
+  `LatestSermons.tsx` did `sermons.find(...) ?? sermons[0]` and immediately read `.id` off the
+  result — this would have crashed outright the moment a homepage genuinely had zero sermons,
+  since the old mock fallback had always silently guaranteed at least one entry existed. Fixed by
+  skipping that section entirely on an empty result. Separately, the sermon detail page had its
+  own special-cased branch for the featured sermon's specific URL that assumed
+  `adaptSermonHero` always returned a real object — this surfaced immediately as a genuine
+  TypeScript build failure the moment that function was made nullable, caught by the compiler
+  before it ever reached manual testing.
+- Checked the two other homepage sections drawing from these same collections
+  (`FindYourPlace`/ministries, `UpcomingEvents`) for the same "heading rendered over an empty
+  grid" risk — neither would have crashed, but both were updated to skip rendering entirely on
+  an empty result, consistent with the Latest Sermons and Events Hero decisions above.
+- **Verified against a genuinely fresh, empty database across all four collections at once, not
+  each in isolation** — confirmed directly at the database level that every table was actually
+  empty before testing, then visually confirmed each of the four public pages, plus the
+  homepage's three affected sections, all render cleanly and honestly with zero fabricated
+  content. Two results that initially looked like failures turned out, on direct inspection of
+  the actual rendered page rather than trusting a keyword match alone, to be false positives
+  from imprecise test terms — not real problems: "Small Group" matched the Ministries page's
+  own, deliberately-kept generic marketing copy about small groups, and "Upcoming" matched an
+  unrelated Quick Links card elsewhere on the homepage. Confirmed each directly before ruling
+  either one out.
+
+## A real crash found after emptying tables directly in Supabase, tracked down to its actual root cause
+
+Reported directly: after clearing the Sermons, Ministries, and Groups tables from Supabase's own
+dashboard rather than through Payload, logged-in members hit a full-page "Application error"
+specifically after clicking through to the Groups or Ministries page — the public site itself
+was unaffected. Diagnosed properly rather than guessed at, since several plausible-sounding
+theories turned out to be wrong on direct testing.
+
+**First theory, tested and ruled out**: a member's own reference to a group/ministry left
+dangling after the group/ministry itself was deleted. Reproduced this exact state twice — once
+against SQLite, then, since production runs Postgres and the two engines can genuinely behave
+differently, installed a real, local Postgres 16 instance specifically to test against the
+actual database engine in use. Both came back clean, no crash either way — worth noting since it
+would have been easy to stop at the SQLite result and ship the wrong fix.
+
+**The actual root cause, found by installing Postgres locally and reading its own
+constraints**: the tables linking a member to their groups/ministries turned out to already have
+`ON DELETE CASCADE` — confirmed directly by deleting a real, referenced row and separately by
+running `TRUNCATE ... CASCADE`, a common way dashboard UIs implement "empty this table." Both
+correctly, automatically cleaned up the member's side too. This ruled out the dangling-reference
+theory entirely — that specific inconsistency cannot occur through any normal Postgres delete,
+no matter how it's triggered.
+
+**Kept digging rather than stopping at "can't reproduce it."** The real cause turned out to be
+one relationship away: `JoinRequests.target` is a *polymorphic* relationship (it can point at
+either a group or a ministry), stored in its own separate join-table row — and that row *also*
+has `ON DELETE CASCADE`, but only on the link itself, not on the parent `JoinRequests` record.
+Deleting a group or ministry directly cascades away the connection describing what a pending
+request was even for, while the request record survives with a completely missing `target`
+field — not an unpopulated ID, but the field absent entirely. Confirmed this precisely: created a
+real join request, deleted its target directly via SQL, queried the request back through
+Payload, and found `target: undefined`. Visited the real Groups page as that member and
+reproduced the exact same error and error digest shown on screen, with the server log pinpointing
+the exact line: `TypeError: Cannot read properties of undefined (reading 'value')`.
+
+- **Checked every place this same assumption appeared, not just the one that crashed** — the
+  same "target always has a value" assumption existed in three separate places:
+  `join-requests-adapter.ts` (the one that crashed), `dashboard-adapter.ts`'s pending-requests
+  card (same crash risk, just not yet triggered), and `JoinRequests.ts`'s own approval hook
+  (would have crashed the moment anyone tried to approve a broken request). All three fixed with
+  the same defensive skip used everywhere else on this project — a missing `target` is treated
+  as an orphaned, unusable request and skipped, not fatal.
+- **Verified the fix against the exact same broken database state that caused the crash** — same
+  local Postgres instance, same broken join-request record, same login. Confirmed the Groups
+  page, the Dashboard, and the Ministries page all render correctly now, and specifically
+  checked that an admin can still cleanly delete this kind of orphaned record afterward.
+- **One more real, correct edge case confirmed rather than assumed away**: tried approving the
+  broken request directly to see what would happen post-fix — Payload's own required-field
+  validation correctly blocks it ("The following field is invalid: Target"), which is the right
+  outcome, not a bug — there's nothing real to approve a member into.
+
 ## Loading state
 
 `src/app/[locale]/(site)/loading.tsx` uses Next's built-in convention: while any page under

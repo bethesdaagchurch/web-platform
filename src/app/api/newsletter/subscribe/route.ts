@@ -21,16 +21,36 @@ export async function POST(request: NextRequest) {
   const listId = Number(process.env.BREVO_LIST_ID ?? '3')
   const templateId = Number(process.env.BREVO_TEMPLATE_ID ?? '1')
 
-  let body: { email?: string; firstName?: string; locale?: string }
+  let body: { email?: string; firstName?: string; locale?: string; sermonNotes?: boolean; eventReminders?: boolean }
   try {
     body = await request.json()
   } catch {
     return NextResponse.json({ error: 'Invalid request.' }, { status: 400 })
   }
 
-  const { email, firstName, locale } = body
+  const { email, firstName, locale, sermonNotes, eventReminders } = body
   if (!email || typeof email !== 'string') {
     return NextResponse.json({ error: 'A valid email address is required.' }, { status: 400 })
+  }
+
+  // Sermon notes / event reminders are separate, dedicated Brevo lists,
+  // not attributes on the general list — the daily cron job
+  // (src/app/api/cron/send-digest/route.ts) queries each list directly
+  // when deciding who to email. Both env vars are optional: if a
+  // checkbox is checked but the corresponding list hasn't been set up in
+  // Brevo yet, that one preference is silently skipped (logged, not
+  // thrown) rather than failing the whole subscription over a single
+  // missing list.
+  const includeListIds = [listId]
+  if (sermonNotes) {
+    const sermonNotesListId = process.env.BREVO_SERMON_NOTES_LIST_ID
+    if (sermonNotesListId) includeListIds.push(Number(sermonNotesListId))
+    else console.warn('BREVO_SERMON_NOTES_LIST_ID is not set — sermon notes preference was ignored for this subscription.')
+  }
+  if (eventReminders) {
+    const eventRemindersListId = process.env.BREVO_EVENT_REMINDERS_LIST_ID
+    if (eventRemindersListId) includeListIds.push(Number(eventRemindersListId))
+    else console.warn('BREVO_EVENT_REMINDERS_LIST_ID is not set — event reminders preference was ignored for this subscription.')
   }
 
   // Built from the incoming request's own host rather than a hardcoded
@@ -53,7 +73,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         email,
         attributes: firstName ? { FIRSTNAME: firstName } : undefined,
-        includeListIds: [listId],
+        includeListIds,
         templateId,
         redirectionUrl,
       }),

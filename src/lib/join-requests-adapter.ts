@@ -17,6 +17,13 @@ export function buildRequestStatusMap(requests: JoinRequest[]): Record<string, J
   // (whose status actually matters right now) wins.
   const sorted = [...requests].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
   for (const req of sorted) {
+    // req.target can be missing entirely, not just an unpopulated bare ID —
+    // if the group/ministry it pointed at was ever deleted directly at the
+    // database level (bypassing Payload's own delete, which keeps this
+    // relationship consistent), the underlying join-table row disappears
+    // but this JoinRequest itself survives, left with no target data at
+    // all. Skipped defensively rather than crashing on `.value`.
+    if (!req.target) continue
     const targetId = typeof req.target.value === 'object' ? req.target.value.id : req.target.value
     map[key(req.target.relationTo, targetId)] = (req.status ?? 'pending') as JoinStatus
   }

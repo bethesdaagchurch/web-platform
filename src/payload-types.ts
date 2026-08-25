@@ -377,6 +377,10 @@ export interface Event {
    * e.g. "7:00 PM - 9:00 PM" or "All Day"
    */
   time: string;
+  /**
+   * Internal only — set automatically by the daily reminder cron job (src/app/api/cron/send-digest/route.ts) once a reminder email has gone out for this event, so the same event can never be reminded about twice. Not meant for manual editing.
+   */
+  reminderSentAt?: string | null;
   location: string;
   /**
    * e.g. "Free Registration" or "$25 per person" — shown on the event detail page’s info bar.
@@ -1004,6 +1008,7 @@ export interface EventsSelect<T extends boolean = true> {
   startDate?: T;
   endDate?: T;
   time?: T;
+  reminderSentAt?: T;
   location?: T;
   cost?: T;
   description?: T;

@@ -9,6 +9,11 @@ function formatDate(iso: string) {
 
 export async function LatestSermons({ sermons }: { sermons: Sermon[] }) {
   const t = await getTranslations('homepage.latestSermons')
+  // No real sermon data at all — skip the section entirely rather than
+  // crash on an empty array (the previous mock fallback always guaranteed
+  // at least one entry) or show a "Latest Word" section with nothing
+  // real in it.
+  if (sermons.length === 0) return null
   const featured = sermons.find((s) => s.featured) ?? sermons[0]
   const rest = sermons.filter((s) => s.id !== featured.id).slice(0, 3)
 

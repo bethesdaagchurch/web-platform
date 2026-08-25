@@ -80,6 +80,13 @@ export const JoinRequests: CollectionConfig = {
         // otherwise keep re-running this on unrelated edits.
         if (doc.status !== 'approved' || previousDoc?.status === 'approved') return
 
+        // target can be missing entirely (not just an unpopulated bare ID)
+        // if the group/ministry it pointed at was ever deleted directly at
+        // the database level, bypassing Payload's own delete — the
+        // underlying join-table row disappears but this JoinRequest
+        // itself survives. Nothing to approve a member into in that case.
+        if (!doc.target) return
+
         const memberId = typeof doc.member === 'object' ? doc.member.id : doc.member
         const targetId = typeof doc.target.value === 'object' ? doc.target.value.id : doc.target.value
 
