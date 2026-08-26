@@ -1,10 +1,11 @@
 import type { GlobalConfig } from 'payload'
-import { extractYoutubeChannelId } from '@/lib/youtube'
+import { extractYoutubeChannelId, extractYoutubeVideoId } from '@/lib/youtube'
 
 export const LivePage: GlobalConfig = {
   slug: 'live-page',
   admin: {
-    description: 'Content for /live. The "stream" fields (title, speaker, live status) are meant to be updated weekly. Sample chat messages and sermon notes are NOT here on purpose — that\u2019s decorative placeholder UI for a chat feature with no real backend yet; putting fake messages in the CMS would only confuse editors about what\u2019s real.',
+    description:
+      'Content for /live. The "stream" fields (title, speaker, live status, current video, sermon notes) are meant to be updated weekly. Chat uses YouTube\u2019s own embedded live chat (see currentLiveVideoUrl below) rather than a custom backend \u2014 there is no site-hosted chat data to manage here.',
   },
   fields: [
     {
@@ -35,10 +36,33 @@ export const LivePage: GlobalConfig = {
               'Your YouTube Channel ID (starts with "UC") \u2014 not your @handle. The player automatically shows whatever\u2019s currently live on this channel, with zero need to update this per stream.',
           },
         },
+        {
+          name: 'currentLiveVideoUrl',
+          type: 'text',
+          validate: (value: string | null | undefined) => {
+            if (!value) return true
+            return extractYoutubeVideoId(value)
+              ? true
+              : 'Could not find a valid video \u2014 paste the full URL of your live stream (e.g. from the Share button or address bar while it\u2019s live).'
+          },
+          admin: {
+            description:
+              'Optional, and unlike the Channel ID above, this DOES need updating \u2014 paste the URL of this week\u2019s specific live stream here to enable the live chat panel on the page. YouTube\u2019s chat embed needs the exact video, not just the channel, so there\u2019s no way to automate this without a separate YouTube API integration. Leave blank when not live \u2014 the page shows a plain "chat isn\u2019t open right now" message instead of a broken embed.',
+          },
+        },
         { name: 'liveLabel', type: 'text', localized: true, required: true, defaultValue: 'Live Now' },
         { name: 'title', type: 'text', localized: true, required: true, admin: { description: 'This week\u2019s sermon title' } },
         { name: 'speaker', type: 'text', required: true },
         { name: 'bookReference', type: 'text', localized: true, required: true },
+        {
+          name: 'sermonNotes',
+          type: 'textarea',
+          localized: true,
+          admin: {
+            description:
+              'Optional. This week\u2019s sermon notes/outline, shown in the tab next to chat. Leave blank if notes aren\u2019t ready yet \u2014 the page shows an honest "not posted yet" message rather than stale or fake content.',
+          },
+        },
       ],
     },
     {

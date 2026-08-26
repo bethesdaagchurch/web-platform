@@ -1813,6 +1813,76 @@ the exact line: `TypeError: Cannot read properties of undefined (reading 'value'
   validation correctly blocks it ("The following field is invalid: Target"), which is the right
   outcome, not a bug — there's nothing real to approve a member into.
 
+## Live page: replacing decorative chat and sermon notes with the real thing
+
+Raised as a direct question — YouTube already has live chat for streams, so why build a custom
+one? — which led to a real architectural discussion rather than jumping straight to code.
+YouTube's chat embed needs the exact video ID of the live stream, not just the channel ID the
+video player already uses, and that's a genuine fork: automate finding it (a new YouTube API
+integration) or have the admin paste the live video's URL in each week (simpler, but reintroduces
+the kind of manual per-stream upkeep the channel-based video player was specifically built to
+avoid). Given the choice directly rather than picked silently — the manual route was chosen.
+
+- **New field, reusing existing validation rather than writing new**: `currentLiveVideoUrl` on
+  the same `LivePage` global, validated with the same YouTube URL parser already used for
+  Sermons' own video field, so it accepts the same range of pasted formats (share links,
+  `/live/` URLs, bare IDs) as everywhere else on the site.
+- **The old fake chat entirely removed, not just hidden** — the hardcoded "Alice M."/"Bob R."
+  placeholder messages, their types, and the mock data are gone. Left blank, the panel now shows
+  an honest "chat isn't open right now" message; filled in, it renders YouTube's real embedded
+  chat for that specific stream.
+- **A real, verified limitation, not assumed**: confirmed directly from YouTube's own help docs
+  that live chat embeds don't work on mobile web at all. Built and tested a specific mobile
+  fallback — a clear message plus a real "Watch on YouTube" link — checked at an actual mobile
+  viewport width rather than just written and trusted.
+- **Sermon notes got their own plain-text field** on the same global, next to the fields already
+  updated weekly — no YouTube involvement at all, since notes are the church's own content.
+  Blank shows an honest "not posted yet" message rather than the old static placeholder;
+  filled in, each line renders as its own paragraph.
+- **Verified precisely, not just visually** — inspected the actual rendered iframe's `src`
+  directly to confirm the video ID and domain were both built correctly, rather than trusting
+  that the video appeared to load. Also directly tested the field's validation both ways: a
+  non-YouTube URL is rejected with a clear message, and leaving it blank is correctly accepted
+  as the normal, optional state.
+
+## Live chat: forcing light theme regardless of the viewer's device settings
+
+Reported directly with a screenshot: the embedded live chat rendered in a dark theme —
+unreadable message text against the panel's white background — because YouTube's chat embed
+follows the viewer's own device or browser color scheme by default, and this site has no dark
+mode of its own to match against.
+
+- **Verified the actual parameter before using it, rather than guessing** — found a working,
+  real-world code example using `dark_theme=1`/`dark_theme=0` on this exact embed, not just a
+  plausible-sounding parameter name assumed from the main YouTube player's unrelated `theme`
+  option.
+- **`dark_theme=0` added explicitly**, not left to default — appended directly to the chat
+  iframe's URL in `LiveChatPanel.tsx`, so the panel always renders light, matching the rest of
+  the site, regardless of what the visitor's own phone or browser is set to.
+- **Verified against the exact scenario reported, not just the default case** — tested with the
+  browser's own color scheme explicitly set to dark (matching a visitor who has dark mode
+  enabled) and confirmed directly, by inspecting the actual rendered iframe's `src`, that
+  `dark_theme=0` is still correctly present regardless.
+
+## Live chat: shelved, not fixed
+
+The `dark_theme=0` fix didn't hold up under a real screenshot — header bar and message text
+both still rendered dark. Given it's an undocumented, unofficial YouTube parameter and there's no
+way to reach into a cross-origin iframe to override its internal styling directly, spending more
+time guessing at further undocumented parameters wasn't worth it — flagged that plainly rather
+than keep digging, and the call was made directly: hide chat, show sermon notes only for now.
+
+- **`CHAT_ENABLED = false`** in `LiveChatPanel.tsx` — a single flag, not a deletion. The full
+  chat implementation (iframe, mobile fallback, dark_theme parameter) stays intact underneath it,
+  specifically so restoring it later — if YouTube's behavior changes or a different embed
+  approach is found — is a one-line revert, not a rebuild.
+- Panel now shows a static "Sermon Notes" label in place of the tab switcher, styled to match
+  the previous active-tab look, so the result reads as an intentional single-purpose panel
+  rather than a broken, half-finished one.
+- Verified directly with `currentLiveVideoUrl` deliberately still set on the global, to confirm
+  the chat stays correctly hidden even when a real live video is configured, not just in the
+  already-empty case.
+
 ## Loading state
 
 `src/app/[locale]/(site)/loading.tsx` uses Next's built-in convention: while any page under

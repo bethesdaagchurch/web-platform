@@ -1,4 +1,4 @@
-import type { LiveStreamData, ChatMessage, SermonNote, OnlineGivingData, InPersonData } from '@/types/live'
+import type { LiveStreamData, OnlineGivingData, InPersonData } from '@/types/live'
 
 export const liveStream: LiveStreamData = {
   isLive: true,
@@ -12,16 +12,10 @@ export const liveStream: LiveStreamData = {
   // breaking the page, which is the honest, correct behavior for
   // genuinely unconfigured content.
   youtubeChannelId: 'UC0000000000000000000000',
+  // No mock fallback for these two — see adaptLiveStream in
+  // live-adapter.ts for why a fake video ID or fake sermon notes would
+  // be actively misleading rather than harmless placeholder content.
 }
-
-export const chatMessages: ChatMessage[] = [
-  { id: 'm1', initials: 'A', avatarColor: 'gold', name: 'Alice M.', time: '10:02 AM', message: 'Good morning church family!' },
-  { id: 'm2', initials: 'B', avatarColor: 'blue', name: 'Bob R.', time: '10:05 AM', message: 'Tuning in from Texas today. Blessed Sunday!' },
-]
-
-export const sermonNotes: SermonNote[] = [
-  { id: 'n1', text: 'Full sermon notes for this week\u2019s message haven\u2019t been posted yet — check back after the service.' },
-]
 
 export const onlineGiving: OnlineGivingData = {
   heading: 'Online Giving',

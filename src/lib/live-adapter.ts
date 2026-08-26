@@ -1,6 +1,7 @@
 import type { LivePage as LivePageGlobal } from '@/payload-types'
 import type { LiveStreamData, OnlineGivingData, InPersonData } from '@/types/live'
 import { liveStream as mockStream, onlineGiving as mockGiving, inPerson as mockInPerson } from '@/data/live-mock'
+import { extractYoutubeVideoId } from '@/lib/youtube'
 
 export function adaptLiveStream(doc: LivePageGlobal | null): LiveStreamData {
   if (!doc?.stream) return mockStream
@@ -11,6 +12,12 @@ export function adaptLiveStream(doc: LivePageGlobal | null): LiveStreamData {
     speaker: doc.stream.speaker || mockStream.speaker,
     bookReference: doc.stream.bookReference || mockStream.bookReference,
     youtubeChannelId: doc.stream.youtubeChannelId || mockStream.youtubeChannelId,
+    // undefined (not a mock fallback) when blank — a fake video ID here
+    // would either silently show a stranger's real YouTube chat or a
+    // broken embed, neither of which is the honest "chat isn't open
+    // right now" state this is meant to produce.
+    currentLiveVideoId: doc.stream.currentLiveVideoUrl ? (extractYoutubeVideoId(doc.stream.currentLiveVideoUrl) ?? undefined) : undefined,
+    sermonNotes: doc.stream.sermonNotes || undefined,
   }
 }
 

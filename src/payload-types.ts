@@ -1602,7 +1602,7 @@ export interface SchedulePage {
   createdAt?: string | null;
 }
 /**
- * Content for /live. The "stream" fields (title, speaker, live status) are meant to be updated weekly. Sample chat messages and sermon notes are NOT here on purpose — that’s decorative placeholder UI for a chat feature with no real backend yet; putting fake messages in the CMS would only confuse editors about what’s real.
+ * Content for /live. The "stream" fields (title, speaker, live status, current video, sermon notes) are meant to be updated weekly. Chat uses YouTube’s own embedded live chat (see currentLiveVideoUrl below) rather than a custom backend — there is no site-hosted chat data to manage here.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "live-page".
@@ -1618,6 +1618,10 @@ export interface LivePage {
      * Your YouTube Channel ID (starts with "UC") — not your @handle. The player automatically shows whatever’s currently live on this channel, with zero need to update this per stream.
      */
     youtubeChannelId: string;
+    /**
+     * Optional, and unlike the Channel ID above, this DOES need updating — paste the URL of this week’s specific live stream here to enable the live chat panel on the page. YouTube’s chat embed needs the exact video, not just the channel, so there’s no way to automate this without a separate YouTube API integration. Leave blank when not live — the page shows a plain "chat isn’t open right now" message instead of a broken embed.
+     */
+    currentLiveVideoUrl?: string | null;
     liveLabel: string;
     /**
      * This week’s sermon title
@@ -1625,6 +1629,10 @@ export interface LivePage {
     title: string;
     speaker: string;
     bookReference: string;
+    /**
+     * Optional. This week’s sermon notes/outline, shown in the tab next to chat. Leave blank if notes aren’t ready yet — the page shows an honest "not posted yet" message rather than stale or fake content.
+     */
+    sermonNotes?: string | null;
   };
   onlineGiving: {
     heading: string;
@@ -2138,10 +2146,12 @@ export interface LivePageSelect<T extends boolean = true> {
     | {
         isLive?: T;
         youtubeChannelId?: T;
+        currentLiveVideoUrl?: T;
         liveLabel?: T;
         title?: T;
         speaker?: T;
         bookReference?: T;
+        sermonNotes?: T;
       };
   onlineGiving?:
     | T

@@ -5,20 +5,11 @@ export interface LiveStreamData {
   speaker: string
   bookReference: string
   youtubeChannelId: string
-}
-
-export interface ChatMessage {
-  id: string
-  initials: string
-  avatarColor: 'gold' | 'blue'
-  name: string
-  time: string
-  message: string
-}
-
-export interface SermonNote {
-  id: string
-  text: string
+  // Extracted video ID (not the raw URL) — undefined whenever the admin
+  // hasn't pasted this week's live video URL, which is the normal state
+  // outside of an actual live stream.
+  currentLiveVideoId?: string
+  sermonNotes?: string
 }
 
 export interface OnlineGivingData {

@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
               <p>Hi ${contact.firstName || 'there'},</p>
               <p>Here are this week's sermon notes:</p>
               <p><strong>${sermon.title}</strong>${sermon.speakerName ? ` — ${sermon.speakerName}` : ''}</p>
-              <p><a href="${process.env.NEXT_PUBLIC_SITE_URL}/sermons/${sermon.slug}">Watch or read more</a></p>
+              <p><a href="${process.env.NEXT_PUBLIC_SERVER_URL}/sermons/${sermon.slug}">Watch or read more</a></p>
               <p>With care,<br>Bethesda AG Church</p>
             `,
           })
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
               <p>Hi ${contact.firstName || 'there'},</p>
               <p>Just a reminder — <strong>${event.title}</strong> is coming up in 3 days.</p>
               <p>${event.time} \u2014 ${event.location}</p>
-              <p><a href="${process.env.NEXT_PUBLIC_SITE_URL}/events/${event.slug}">See event details</a></p>
+              <p><a href="${process.env.NEXT_PUBLIC_SERVER_URL}/events/${event.slug}">See event details</a></p>
               <p>We hope to see you there!<br>Bethesda AG Church</p>
             `,
           })

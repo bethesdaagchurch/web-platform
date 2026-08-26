@@ -302,7 +302,11 @@
     "liveChat": "Live Chat",
     "sermonNotes": "Sermon Notes",
     "sayHello": "Say hello...",
-    "sendMessage": "Send message"
+    "sendMessage": "Send message",
+    "chatNotOpen": "Chat isn't open right now — it's available here during our live streams.",
+    "chatMobileUnavailable": "Live chat isn't available on mobile browsers.",
+    "watchOnYoutube": "Watch on YouTube to join the conversation",
+    "sermonNotesNotPosted": "This week's sermon notes haven't been posted yet — check back after the service."
   },
   "dashboard": {
     "welcomeBack": "Welcome back",
