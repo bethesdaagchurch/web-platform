@@ -1883,6 +1883,45 @@ than keep digging, and the call was made directly: hide chat, show sermon notes 
   the chat stays correctly hidden even when a real live video is configured, not just in the
   already-empty case.
 
+## Ministry detail page: join button wasn't gated behind login at all
+
+Reported directly: the `/ministries` listing page correctly restricts joining to logged-in
+members, but each individual ministry's own detail page showed a "Join Ministry" button to
+everyone, logged in or not.
+
+Traced to the actual root cause rather than assumed: the detail page had never been updated
+since the listing page's own join button was upgraded from a plain `mailto:` link to a real,
+trackable join-request system — confirmed by a comment already sitting in `MinistryCard.tsx`
+describing that exact migration, and a leftover "hasn't been designed yet" disclaimer on the
+detail page nobody had removed since. The two pages had simply drifted out of sync, not two
+separate bugs.
+
+- **Reused the exact same components as the listing page, not new ones** — the same
+  `MembersOnlyGate` wrapping the same `JoinRequestButton`, fed by the same `getJoinStatus`/
+  `buildRequestStatusMap` helpers. This isn't just visual consistency — it's the same underlying
+  join-requests data, so approving or declining a request anywhere (including from `/admin`) is
+  reflected identically everywhere a member might check their status: this detail page, the
+  listing page, and the dashboard's pending-requests card, since all three now read from the
+  same source rather than each having their own logic.
+- **The stale `mailto:` link and its own leftover disclaimer text removed**, not left alongside
+  the new button.
+- **A real, compiler-caught type mismatch, not a guess**: Payload types an optional text field as
+  `string | null`, while `JoinRequestButton`'s label prop only accepts `string | undefined` —
+  caught directly by the TypeScript build, not assumed to be fine, and fixed with a simple `??
+  undefined` coalesce.
+- **Verified every state directly, not just the reported one**: anonymous visitor (correctly
+  shown the same sign-in prompt used elsewhere), a member with no request yet (real button), a
+  member with a pending request, and a member already approved — each seeded as real data and
+  checked individually. Also clicked the real button as a real member and confirmed two things
+  together: the page updates immediately to "Pending," and reloading the separate listing page
+  afterward shows the same "Pending" status — proving this created a genuine, persisted database
+  record rather than only updating in-page state.
+- **Checked Groups' own detail page for the same pattern while already in this area** — found a
+  different, pre-existing gap instead: it's correctly gated, but has no join button on the
+  detail page at all, just a "not a member yet" message with no path to actually join. Flagged
+  as a separate, follow-up item rather than fixed here, since it's new functionality to add, not
+  a consistency bug to correct — outside what was actually asked for this round.
+
 ## Loading state
 
 `src/app/[locale]/(site)/loading.tsx` uses Next's built-in convention: while any page under
