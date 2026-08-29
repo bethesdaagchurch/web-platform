@@ -25,6 +25,7 @@ export default async function SermonsPage({ params }: { params: Promise<{ locale
   })
 
   const heroData = adaptSermonHero(sermonsPage)
+  const podcastCtaData = adaptPodcastCta(sermonsPage)
 
   return (
     <>
@@ -35,7 +36,7 @@ export default async function SermonsPage({ params }: { params: Promise<{ locale
         speakerOptions={speakerOptions}
         topicOptions={topicOptions}
       />
-      <PodcastCta data={adaptPodcastCta(sermonsPage)} />
+      {podcastCtaData && <PodcastCta data={podcastCtaData} />}
     </>
   )
 }

@@ -1,4 +1,4 @@
-import type { SermonHeroData, SermonEntry, FilterOption, PodcastCtaData } from '@/types/sermons'
+import type { SermonHeroData, SermonEntry, FilterOption } from '@/types/sermons'
 
 export const sermonHero: SermonHeroData = {
   badge: 'Latest Message',
@@ -136,13 +136,3 @@ export const sermonEntries: SermonEntry[] = [
     youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
   },
 ]
-
-export const podcastCta: PodcastCtaData = {
-  heading: 'Take the Message With You',
-  description:
-    'Listen to our weekly sermons on your favorite streaming platform. Subscribe to stay updated and never miss a message.',
-  links: [
-    { label: 'Apple Podcasts', href: 'https://podcasts.apple.com', icon: 'headphones' },
-    { label: 'Spotify', href: 'https://open.spotify.com', icon: 'waveform' },
-  ],
-}

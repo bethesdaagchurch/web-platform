@@ -23,6 +23,8 @@ export function PodcastCta({ data }: { data: PodcastCtaData }) {
               <Link
                 key={link.label}
                 href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-medium text-brand-navy-dark hover:bg-white/90"
               >
                 <Icon size={16} /> {link.label}

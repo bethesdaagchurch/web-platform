@@ -1,7 +1,7 @@
 import type { Sermon as SermonDoc, SermonsPage as SermonsPageGlobal, Media } from '@/payload-types'
 import type { SermonHeroData, SermonEntry, FilterOption, PodcastCtaData } from '@/types/sermons'
 import type { Sermon as HomepageSermon } from '@/types/homepage'
-import { sermonHero as mockHero, podcastCta as mockPodcastCta } from '@/data/sermons-mock'
+import { sermonHero as mockHero } from '@/data/sermons-mock'
 
 function mediaUrl(media: number | Media | null | undefined, fallback: string): string {
   if (media && typeof media === 'object' && media.url) return media.url
@@ -109,8 +109,14 @@ export function adaptFilterOptions(
   }
 }
 
-export function adaptPodcastCta(doc: SermonsPageGlobal | null): PodcastCtaData {
-  if (!doc?.podcastCta || !doc.podcastCta.links || doc.podcastCta.links.length === 0) return mockPodcastCta
+// Returns null (not a mock fallback) when the admin hasn't added any real
+// platform links yet — the mock data pointed at podcasts.apple.com and
+// open.spotify.com's generic homepages, not the church's actual show,
+// which would send a visitor somewhere real-looking but wrong rather than
+// an honest "not set up yet" state. The page skips rendering this section
+// entirely in that case, same principle as the sermon/event hero sections.
+export function adaptPodcastCta(doc: SermonsPageGlobal | null): PodcastCtaData | null {
+  if (!doc?.podcastCta || !doc.podcastCta.links || doc.podcastCta.links.length === 0) return null
   return {
     heading: doc.podcastCta.heading,
     description: doc.podcastCta.description,

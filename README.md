@@ -1922,6 +1922,42 @@ separate bugs.
   as a separate, follow-up item rather than fixed here, since it's new functionality to add, not
   a consistency bug to correct — outside what was actually asked for this round.
 
+## Podcast links: no longer sending visitors to the wrong place, or away without warning
+
+Raised as an open question — "how does this work, is it complete?" — investigated first, fixed
+second, with the fix scoped to exactly the two real gaps that investigation actually found.
+
+Traced the whole path before answering: the section is genuinely admin-editable (heading,
+description, up to 4 platform links), and — checked directly rather than assumed — the site's
+locale-routing `Link` component does correctly pass real external URLs through unmangled. Two
+things weren't fine, though, both confirmed by rendering real data and inspecting the actual
+HTML rather than reading the code and guessing:
+
+- **The unconfigured fallback wasn't a harmless placeholder** — it was a fully real, clickable
+  "Apple Podcasts" and "Spotify" pair pointing at those platforms' generic homepages, not the
+  church's own show. A visitor would land somewhere real-looking but unrelated, not see an
+  honest "not set up" message. Same category of issue as the mock-data fixes made earlier on
+  this project, just found later because this one was originally, mistakenly reasoned to be
+  harmless generic page copy.
+- **Links opened in the same tab**, confirmed directly by inspecting the rendered `<a>` tag —
+  no `target="_blank"`, unlike the footer's social icons elsewhere on the site, which do open in
+  a new tab. Clicking "Spotify" took a visitor fully away from the church's own site rather than
+  alongside it.
+
+Fixed the same way as the other featured-content sections on this project: `adaptPodcastCta` now
+returns `null` instead of the mock data when nothing's configured, the page skips rendering the
+section entirely in that case, and the dead mock export was removed rather than left behind
+unused. `target="_blank"` and `rel="noopener noreferrer"` added to the actual links, matching
+the pattern already used elsewhere. Verified both states directly: unconfigured shows a clean
+page with no section and no fake links at all, and configured with a real link shows the section
+correctly with the exact `href` preserved and the new `target`/`rel` attributes both confirmed
+present on the actual rendered element.
+
+Noticed and flagged, deliberately left alone since it's a separate, different-shaped issue: the
+field controlling which sermon is "featured" is marked required in the schema, in tension with
+earlier work that made the adapter treat it as genuinely optional. Not fixed here — out of scope
+for what was actually asked this round.
+
 ## Loading state
 
 `src/app/[locale]/(site)/loading.tsx` uses Next's built-in convention: while any page under
